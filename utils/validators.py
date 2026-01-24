@@ -34,13 +34,13 @@ class InputValidator:
             username: GitHub username to validate
 
         Returns:
-            Cleaned username
+            Cleaned username or empty string
 
         Raises:
             InvalidGitHubUsername: If username is invalid
         """
         if not username:
-            raise InvalidGitHubUsername("")
+            return ""
 
         username = username.strip()
 

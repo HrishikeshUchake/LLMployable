@@ -54,12 +54,16 @@ class LaTeXCompiler:
             )
 
             if result.returncode != 0:
-                print(f"LaTeX compilation warning/error: {result.stderr}")
+                print(
+                    f"LaTeX compilation warning/error:\n{result.stdout}\n{result.stderr}"
+                )
 
             if os.path.exists(pdf_file):
                 return pdf_file
             else:
-                raise Exception("PDF file was not generated")
+                raise Exception(
+                    f"PDF file was not generated. Return code: {result.returncode}"
+                )
 
         except FileNotFoundError:
             # pdflatex not installed, create a simple text file as fallback
@@ -74,7 +78,7 @@ class LaTeXCompiler:
             raise
 
     def _generate_latex(self, content: Dict) -> str:
-        """Generate LaTeX code for resume"""
+        """Generate LaTeX code for resume using the professional template style"""
 
         # Sanitize all text inputs to prevent LaTeX injection
         def sanitize_latex(text: str) -> str:
@@ -101,91 +105,205 @@ class LaTeXCompiler:
         name = sanitize_latex(content.get("name", "Your Name"))
         email = sanitize_latex(content.get("email", ""))
         location = sanitize_latex(content.get("location", ""))
-        github = sanitize_latex(content.get("github_url", ""))
-        linkedin = sanitize_latex(content.get("linkedin_url", ""))
+        github = sanitize_latex(content.get("github_url", "github.com"))
         summary = sanitize_latex(content.get("summary", ""))
         skills = content.get("skills", [])
+        experience = content.get("experience", [])
         projects = content.get("projects", [])
+        education = content.get("education", [])
+        certifications = content.get("certifications", [])
+        languages = content.get("languages", [])
 
-        # Build contact info
-        contact_parts = []
-        if email:
-            # Email needs to be sanitized but the actual email in mailto should not be double-escaped
-            contact_parts.append(
-                f"\\href{{mailto:{content.get('email', '')}}}{{{email}}}"
-            )
+        # Format header contact line
+        contact_items = []
         if location:
-            contact_parts.append(location)
+            contact_items.append(location)
+        if email:
+            contact_items.append(
+                f"\\href{{mailto:{content.get('email', '')}}}{{\\underline{{{email}}}}}"
+            )
         if github:
-            contact_parts.append(f"\\href{{https://{github}}}{{{github}}}")
-        if linkedin:
-            contact_parts.append(f"\\href{{{linkedin}}}{{LinkedIn}}")
-
-        contact_line = " $|$ ".join(contact_parts)
-
-        # Build skills section
-        skills_text = (
-            ", ".join([sanitize_latex(s) for s in skills[:15]])
-            if skills
-            else "Python, JavaScript, Git"
-        )
-
-        # Build projects section
-        projects_section = ""
-        for proj in projects[:5]:
-            proj_name = sanitize_latex(proj.get("name", "Project"))
-            proj_desc = sanitize_latex(proj.get("description", "Project description"))
-            proj_tech = proj.get("technologies", [])
-            tech_str = (
-                ", ".join([sanitize_latex(t) for t in proj_tech[:5]])
-                if proj_tech
-                else ""
+            github_display = github.replace("https://", "").replace("http://", "")
+            contact_items.append(
+                f"\\href{{https://{github}}}{{\\underline{{{github_display}}}}}"
             )
 
-            projects_section += f"""
-\\textbf{{{proj_name}}} \\\\
-{proj_desc} \\\\
-\\textit{{Technologies: {tech_str}}} \\\\[0.5em]
-"""
+        contact_line = " $|$ ".join(contact_items)
 
-        latex_template = f"""\\documentclass[11pt,a4paper]{{article}}
-\\usepackage[margin=0.7in]{{geometry}}
-\\usepackage{{hyperref}}
-\\usepackage{{enumitem}}
-\\usepackage{{titlesec}}
+        # Build Experience items
+        exp_latex = ""
+        for exp in experience[:5]:
+            role = sanitize_latex(exp.get("role", ""))
+            company = sanitize_latex(exp.get("company", ""))
+            date = sanitize_latex(exp.get("date", ""))
+            # Handle list of bullets if description is a list, otherwise split by period or newline
+            desc = exp.get("description", "")
+            bullets = []
+            if isinstance(desc, list):
+                bullets = desc
+            else:
+                # Split by newline or large gaps
+                bullets = [b.strip() for b in desc.split("\n") if b.strip()]
+                if not bullets:
+                    # Fallback to splitting by period if it looks like sentences
+                    bullets = [b.strip() for b in desc.split(". ") if b.strip()]
 
-% Format section titles
-\\titleformat{{\\section}}{{\\Large\\bfseries}}{{}}{{0em}}{{}}[\\titlerule]
-\\titlespacing{{\\section}}{{0pt}}{{10pt}}{{5pt}}
+            exp_latex += f"    \\resumeSubheading\n      {{{company}}}{{{date}}}\n      {{{role}}}{{}}\n      \\resumeItemListStart\n"
+            for bullet in bullets[:4]:
+                exp_latex += f"        \\resumeItem{{{sanitize_latex(bullet)}}}\n"
+            exp_latex += "      \\resumeItemListEnd\n\n"
 
-% Remove page numbers
-\\pagestyle{{empty}}
+        # Build Education items
+        edu_latex = ""
+        for edu in education:
+            school = sanitize_latex(edu.get("school", ""))
+            degree = sanitize_latex(edu.get("degree", ""))
+            date = sanitize_latex(edu.get("date", ""))
+            details = sanitize_latex(edu.get("details", ""))
+            edu_latex += f"    \\resumeSubheading\n      {{{school}}}{{{date}}}\n      {{{degree}}}{{}}\n"
+            if details:
+                edu_latex += f"      \\resumeItemListStart\n        \\resumeItem{{{details}}}\n      \\resumeItemListEnd\n"
+            edu_latex += "\n"
+
+        # Build Projects items
+        proj_latex = ""
+        for proj in projects[:4]:
+            p_name = sanitize_latex(proj.get("name", "Project"))
+            p_desc = sanitize_latex(proj.get("description", ""))
+            p_tech = ", ".join(
+                [sanitize_latex(t) for t in proj.get("technologies", [])]
+            )
+            proj_title = f"\\textbf{{{p_name}}}"
+            if p_tech:
+                proj_title += f" $|$ \\emph{{{p_tech}}}"
+
+            proj_latex += f"    \\resumeProjectHeading\n      {{{proj_title}}}{{}}\n      \\resumeItemListStart\n"
+            # Split description into bullets if needed
+            bullets = [b.strip() for b in p_desc.split("\n") if b.strip()]
+            for bullet in bullets[:2]:
+                proj_latex += f"        \\resumeItem{{{sanitize_latex(bullet)}}}\n"
+            proj_latex += "      \\resumeItemListEnd\n\n"
+
+        # Build Skills
+        skills_str = ", ".join([sanitize_latex(s) for s in skills[:20]])
+
+        # Build Certifications
+        cert_items = []
+        for cert in certifications[:5]:
+            cert_items.append(
+                f"\\resumeProjectHeading\n      {{\\textbf{{{sanitize_latex(cert)}}}}}{{}}"
+            )
+        cert_latex = "\n".join(cert_items)
+
+        # Build Languages
+        lang_str = ", ".join([sanitize_latex(l) for l in languages])
+
+        # Full Template - "Zero-Dependency" Professional Style
+        latex_template = f"""\\documentclass[letterpaper,11pt]{{article}}
+
+\\usepackage[hidelinks]{{hyperref}}
+\\usepackage{{fancyhdr}}
+\\usepackage[english]{{babel}}
+\\usepackage{{tabularx}}
+\\usepackage{{geometry}}
+\\geometry{{left=0.5in, top=0.5in, right=0.5in, bottom=0.5in}}
+
+% Font option: Use standard Palatino if available, or just stick to default
+\\usepackage[T1]{{fontenc}}
+
+\\pagestyle{{fancy}}
+\\fancyhf{{}} 
+\\fancyfoot{{}}
+\\renewcommand{{\\headrulewidth}}{{0pt}}
+
+\\urlstyle{{same}}
+
+\\raggedbottom
+\\raggedright
+\\setlength{{\\tabcolsep}}{{0in}}
+
+% Sections formatting - Manual implementation without titlesec
+\\newcommand{{\\cvsection}}[1]{{
+  \\vspace{{10pt}}
+  {{\\large \\scshape #1}} \\\\ \\hrule \\vspace{{5pt}}
+}}
+
+% Custom commands implementation using standard LaTeX
+\\newcommand{{\\resumeItem}}[1]{{
+  \\item \\small{{#1 \\vspace{{-2pt}}}}
+}}
+
+\\newcommand{{\\resumeSubheading}}[4]{{
+  \\item
+  \\begin{{tabular*}}{{0.97\\textwidth}}[t]{{l@{{\\extracolsep{{\\fill}}}}r}}
+    \\textbf{{#1}} & #2 \\\\
+    \\textit{{\\small#3}} & \\textit{{\\small #4}} \\\\
+  \\end{{tabular*}}\\vspace{{-7pt}}
+}}
+
+\\newcommand{{\\resumeProjectHeading}}[2]{{
+  \\item
+  \\begin{{tabular*}}{{0.97\\textwidth}}{{l@{{\\extracolsep{{\\fill}}}}r}}
+    \\small#1 & #2 \\\\
+  \\end{{tabular*}}\\vspace{{-7pt}}
+}}
+
+\\newcommand{{\\resumeItemListStart}}{{\\begin{{itemize}}\\small}}
+\\newcommand{{\\resumeItemListEnd}}{{\\end{{itemize}}\\vspace{{-5pt}}}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \\begin{{document}}
 
-% Header
+%----------HEADING----------
 \\begin{{center}}
-    {{\\Huge \\textbf{{{name}}}}} \\\\[0.3em]
-    {contact_line}
+    \\textbf{{\\Huge \\scshape {name}}} \\\\ \\vspace{{1pt}}
+    \\small {contact_line}
 \\end{{center}}
 
-\\vspace{{0.5em}}
+%----------SUMMARY----------
+\\cvsection{{Summary}}
+\\small{{{summary}}}
 
-% Summary
-\\section*{{Professional Summary}}
-{summary}
+%-----------EXPERIENCE-----------
+\\cvsection{{Experience}}
+\\begin{{itemize}}
+{exp_latex}
+\\end{{itemize}}
 
-% Skills
-\\section*{{Technical Skills}}
-{skills_text}
+%-----------PROJECTS-----------
+\\cvsection{{Notable Projects}}
+\\begin{{itemize}}
+{proj_latex}
+\\end{{itemize}}
 
-% Projects
-\\section*{{Notable Projects}}
-{projects_section}
+%-----------EDUCATION-----------
+\\cvsection{{Education}}
+\\begin{{itemize}}
+{edu_latex}
+\\end{{itemize}}
+
+%-----------SKILLS-----------
+\\cvsection{{Technical Skills}}
+\\begin{{itemize}}
+\\item\\small{{\\textbf{{Skills:}} {skills_str}}}
+\\end{{itemize}}
+
+%-----------CERTIFICATIONS-----------
+\\cvsection{{Certifications}}
+\\begin{{itemize}}
+{cert_latex}
+\\end{{itemize}}
+
+%-----------LANGUAGES-----------
+\\cvsection{{Languages}}
+\\begin{{itemize}}
+\\item\\small{{{lang_str}}}
+\\end{{itemize}}
 
 \\end{{document}}
 """
-
         return latex_template
 
     def _generate_text_resume(self, content: Dict) -> str:
@@ -195,8 +313,13 @@ class LaTeXCompiler:
         location = content.get("location", "")
         github = content.get("github_url", "")
         summary = content.get("summary", "")
+        summary = content.get("summary", "")
         skills = content.get("skills", [])
+        experience = content.get("experience", [])
         projects = content.get("projects", [])
+        education = content.get("education", [])
+        certifications = content.get("certifications", [])
+        languages = content.get("languages", [])
 
         text = f"""
 {'='*60}
@@ -214,14 +337,29 @@ Professional Summary:
 Technical Skills:
   {', '.join(skills[:15])}
 
-Notable Projects:
+Professional Experience:
 """
+        for exp in experience[:5]:
+            text += f"  {exp.get('role', '')} @ {exp.get('company', '')} | {exp.get('date', '')}\n"
+            text += f"    {exp.get('description', '')}\n\n"
 
+        text += "\nNotable Projects:\n"
         for proj in projects[:5]:
-            text += f"""
-  {proj.get('name', 'Project')}
-    {proj.get('description', '')}
-    Technologies: {', '.join(proj.get('technologies', [])[:5])}
-"""
+            text += f"  {proj.get('name', 'Project')}\n"
+            text += f"    {proj.get('description', '')}\n"
+            text += (
+                f"    Technologies: {', '.join(proj.get('technologies', [])[:5])}\n\n"
+            )
+
+        text += "\nEducation:\n"
+        for edu in education:
+            text += f"  {edu.get('degree', '')}, {edu.get('school', '')} | {edu.get('date', '')}\n"
+            text += f"    {edu.get('details', '')}\n\n"
+
+        if certifications:
+            text += f"\nCertifications: {', '.join(certifications)}\n"
+
+        if languages:
+            text += f"Languages: {', '.join(languages)}\n"
 
         return text

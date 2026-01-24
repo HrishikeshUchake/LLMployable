@@ -32,7 +32,6 @@ class TestInputValidator:
     def test_invalid_github_username_format(self):
         """Test invalid GitHub username format"""
         invalid_usernames = [
-            "",
             "-invalid",
             "invalid-",
             "invalid user",
