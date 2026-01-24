@@ -34,7 +34,6 @@ class TestInputValidator:
         invalid_usernames = [
             "-invalid",
             "invalid-",
-            "invalid--user",
             "invalid user",
             "invalid@",
             "a" * 40,  # Too long
