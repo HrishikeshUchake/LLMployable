@@ -8,6 +8,7 @@ and generates tailored resumes as PDFs using LaTeX.
 from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
 import os
+import os.path
 from dotenv import load_dotenv
 
 # Import our modules
@@ -279,7 +280,6 @@ def generate_resume():
         pdf_path = latex_compiler.compile(resume_content)
         
         # Validate that the PDF path is within the temp directory (security check)
-        import os.path
         abs_temp_dir = os.path.abspath('temp')
         abs_pdf_path = os.path.abspath(pdf_path)
         if not abs_pdf_path.startswith(abs_temp_dir):
@@ -301,5 +301,10 @@ if __name__ == '__main__':
     # Create necessary directories
     os.makedirs('temp', exist_ok=True)
     
+    # Get configuration from environment
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    host = os.getenv('FLASK_HOST', '0.0.0.0')
+    port = int(os.getenv('FLASK_PORT', '5000'))
+    
     # Run the application
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=debug_mode, host=host, port=port)

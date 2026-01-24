@@ -48,10 +48,10 @@ print("\n2. Scraping GitHub profile...")
 github_scraper = GitHubScraper()
 
 # You can replace this with any GitHub username
-# For demo purposes, using a placeholder
+# For demo purposes, using placeholder data (not a real GitHub user)
 profile_data = {
     'github': {
-        'username': 'demo-user',  # Actual GitHub username
+        'username': 'demo-user',  # Example GitHub username (placeholder)
         'name': 'Demo User',
         'bio': 'Full-stack developer with a passion for building scalable web applications',
         'location': 'San Francisco, CA',

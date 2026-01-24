@@ -61,9 +61,8 @@ class LaTeXCompiler:
             txt_file = pdf_file.replace('.pdf', '.txt')
             with open(txt_file, 'w', encoding='utf-8') as f:
                 f.write(self._generate_text_resume(resume_content))
-            # Rename to .pdf for consistency (will be plain text)
-            os.rename(txt_file, pdf_file)
-            return pdf_file
+            # Return with .txt extension to be clear about format
+            return txt_file
         except Exception as e:
             print(f"Error compiling LaTeX: {e}")
             raise
@@ -105,7 +104,8 @@ class LaTeXCompiler:
         # Build contact info
         contact_parts = []
         if email:
-            contact_parts.append(f"\\href{{mailto:{email}}}{{{email}}}")
+            # Email needs to be sanitized but the actual email in mailto should not be double-escaped
+            contact_parts.append(f"\\href{{mailto:{content.get('email', '')}}}{{{email}}}")
         if location:
             contact_parts.append(location)
         if github:
