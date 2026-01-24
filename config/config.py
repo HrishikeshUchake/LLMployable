@@ -71,7 +71,7 @@ class Config:
     GITHUB_MAX_TOP_PROJECTS = 5
 
     # Gemini
-    GEMINI_MODEL = "gemini-1.5-pro"
+    GEMINI_MODEL = "gemini-2.0-flash-lite"
     GEMINI_MAX_TOKENS = 2000
     GEMINI_TEMPERATURE = 0.7
 

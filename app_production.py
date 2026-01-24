@@ -29,6 +29,7 @@ from config import (
     api_logger,
     error_logger,
     MployableException,
+    ValidationError,
     InvalidGitHubUsername,
     InvalidJobDescription,
     GitHubAPIError,
@@ -196,60 +197,81 @@ HTML_TEMPLATE = """
                 <input type="text" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/username/">
                 <div class="example">Example: https://www.linkedin.com/in/satyanadella/</div>
             </div>
-            
+
+            <div class="form-group">
+                <label for="linkedinFile">OR Upload LinkedIn Data (ZIP):</label>
+                <input type="file" id="linkedinFile" name="linkedinFile" accept=".zip">
+                <div class="example">Settings > Data Privacy > Get a copy of your data > Download ZIP</div>
+            </div>
+
             <div class="form-group">
                 <label for="jobDescription">Job Description:</label>
                 <textarea id="jobDescription" name="jobDescription" placeholder="Paste the job description here..."></textarea>
                 <div class="example">Paste the full job description including requirements and responsibilities</div>
             </div>
-            
+
             <button type="submit" id="submitBtn">Generate Tailored Resume</button>
         </form>
-        
+
         <div id="status" class="status"></div>
     </div>
 
     <script>
         document.getElementById('resumeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const submitBtn = document.getElementById('submitBtn');
             const status = document.getElementById('status');
-            
+
             const github = document.getElementById('github').value;
             const linkedin = document.getElementById('linkedin').value;
+            const linkedinFile = document.getElementById('linkedinFile').files[0];
             const jobDescription = document.getElementById('jobDescription').value;
-            
-            if (!github && !linkedin) {
+
+            if (!github && !linkedin && !linkedinFile) {
                 status.className = 'status error';
-                status.textContent = 'Please provide at least one profile (GitHub or LinkedIn)';
+                status.textContent = 'Please provide at least one profile (GitHub, LinkedIn URL, or Data Export)';
                 return;
             }
-            
+
             if (!jobDescription) {
                 status.className = 'status error';
                 status.textContent = 'Please provide a job description';
                 return;
             }
-            
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Generating Resume...';
             status.className = 'status info';
             status.textContent = '⏳ Scraping profiles and analyzing job description...';
-            
+
             try {
-                const response = await fetch('/api/v1/generate-resume', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        github_username: github,
-                        linkedin_url: linkedin,
-                        job_description: jobDescription
-                    })
-                });
-                
+                let response;
+                if (linkedinFile) {
+                    const formData = new FormData();
+                    formData.append('github_username', github);
+                    formData.append('linkedin_url', linkedin);
+                    formData.append('job_description', jobDescription);
+                    formData.append('linkedin_data', linkedinFile);
+
+                    response = await fetch('/api/v1/generate-resume', {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    response = await fetch('/api/v1/generate-resume', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            github_username: github,
+                            linkedin_url: linkedin,
+                            job_description: jobDescription
+                        })
+                    });
+                }
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.message || error.error || 'Failed to generate resume');
@@ -360,32 +382,30 @@ def generate_resume():
     """
     Main endpoint to generate a tailored resume
 
-    Expected JSON payload:
-    {
-        "github_username": "username",
-        "linkedin_url": "https://linkedin.com/in/username",
-        "job_description": "Job description text..."
-    }
+    Expected payload:
+    - JSON: {"github_username": "...", "linkedin_url": "...", "job_description": "..."}
+    - OR Multipart: form fields github_username, linkedin_url, job_description AND optional file linkedin_data
 
     Returns:
         PDF file: application/pdf
-
-    Errors:
-        400: Validation error
-        404: User not found
-        429: Rate limit exceeded
-        500: Processing error
     """
     try:
         # Parse and validate request
-        data = request.get_json(force=True) if not request.json else request.json
+        linkedin_file = None
 
-        if not data:
-            raise InvalidJobDescription("Request body is empty")
+        if request.content_type and "multipart/form-data" in request.content_type:
+            github_username = request.form.get("github_username", "").strip()
+            linkedin_url = request.form.get("linkedin_url", "").strip()
+            job_description = request.form.get("job_description", "").strip()
+            linkedin_file = request.files.get("linkedin_data")
+        else:
+            data = request.get_json(force=True) if not request.json else request.json
+            if not data:
+                raise InvalidJobDescription("Request body is empty")
 
-        github_username = data.get("github_username", "").strip()
-        linkedin_url = data.get("linkedin_url", "").strip()
-        job_description = data.get("job_description", "").strip()
+            github_username = data.get("github_username", "").strip()
+            linkedin_url = data.get("linkedin_url", "").strip()
+            job_description = data.get("job_description", "").strip()
 
         logger.info(f"[{request.request_id}] Resume generation request")
 
@@ -397,6 +417,11 @@ def generate_resume():
         ) = InputValidator.validate_request(
             github_username, job_description, linkedin_url
         )
+
+        if not github_username and not linkedin_url and not (linkedin_file and linkedin_file.filename):
+            raise ValidationError(
+                "Please provide at least one profile source (GitHub Username, LinkedIn URL, or LinkedIn Data Export zip file)"
+            )
 
         logger.info(f"[{request.request_id}] Input validation passed")
 
@@ -419,7 +444,30 @@ def generate_resume():
                 logger.error(f"[{request.request_id}] GitHub API error: {e}")
                 raise
 
-        if linkedin_url:
+        # LinkedIn Data Handling (File Export or URL)
+        if linkedin_file and linkedin_file.filename:
+            try:
+                logger.debug(f"[{request.request_id}] Parsing LinkedIn data export")
+                # Save file temporarily
+                temp_filename = f"{uuid.uuid4()}_{linkedin_file.filename}"
+                file_path = os.path.join(config.UPLOAD_DIR, temp_filename)
+                os.makedirs(config.UPLOAD_DIR, exist_ok=True)
+                linkedin_file.save(file_path)
+
+                linkedin_data = linkedin_scraper.parse_export(file_path)
+                profile_data["linkedin"] = linkedin_data
+                logger.debug(
+                    f"[{request.request_id}] LinkedIn export parsed successfully"
+                )
+
+                # Cleanup
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                logger.warning(
+                    f"[{request.request_id}] LinkedIn export parsing failed: {e}"
+                )
+        elif linkedin_url:
             try:
                 logger.debug(f"[{request.request_id}] Scraping LinkedIn profile")
                 linkedin_data = linkedin_scraper.scrape_profile(linkedin_url)

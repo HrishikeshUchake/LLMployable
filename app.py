@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
 import os
 import os.path
+import uuid
 from dotenv import load_dotenv
 
 # Import our modules
@@ -142,64 +143,85 @@ HTML_TEMPLATE = """
             </div>
             
             <div class="form-group">
-                <label for="linkedin">LinkedIn Profile URL:</label>
+                <label for="linkedin">LinkedIn Profile URL (optional):</label>
                 <input type="text" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/username/">
                 <div class="example">Example: https://www.linkedin.com/in/satyanadella/</div>
             </div>
-            
+
+            <div class="form-group">
+                <label for="linkedinFile">OR Upload LinkedIn Data (ZIP):</label>
+                <input type="file" id="linkedinFile" name="linkedinFile" accept=".zip">
+                <div class="example">Settings > Data Privacy > Get a copy of your data > Download ZIP</div>
+            </div>
+
             <div class="form-group">
                 <label for="jobDescription">Job Description:</label>
                 <textarea id="jobDescription" name="jobDescription" placeholder="Paste the job description here..."></textarea>
                 <div class="example">Paste the full job description including requirements and responsibilities</div>
             </div>
-            
+
             <button type="submit" id="submitBtn">Generate Tailored Resume</button>
         </form>
-        
+
         <div id="status" class="status"></div>
     </div>
 
     <script>
         document.getElementById('resumeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const submitBtn = document.getElementById('submitBtn');
             const status = document.getElementById('status');
-            
+
             const github = document.getElementById('github').value;
             const linkedin = document.getElementById('linkedin').value;
+            const linkedinFile = document.getElementById('linkedinFile').files[0];
             const jobDescription = document.getElementById('jobDescription').value;
-            
-            if (!github && !linkedin) {
+
+            if (!github && !linkedin && !linkedinFile) {
                 status.className = 'status error';
-                status.textContent = 'Please provide at least one profile (GitHub or LinkedIn)';
+                status.textContent = 'Please provide at least one profile (GitHub, LinkedIn URL, or Data Export)';
                 return;
             }
-            
+
             if (!jobDescription) {
                 status.className = 'status error';
                 status.textContent = 'Please provide a job description';
                 return;
             }
-            
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Generating Resume...';
             status.className = 'status info';
             status.textContent = '⏳ Scraping profiles and analyzing job description...';
-            
+
             try {
-                const response = await fetch('/api/generate-resume', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        github_username: github,
-                        linkedin_url: linkedin,
-                        job_description: jobDescription
-                    })
-                });
-                
+                let response;
+                if (linkedinFile) {
+                    const formData = new FormData();
+                    formData.append('github_username', github);
+                    formData.append('linkedin_url', linkedin);
+                    formData.append('job_description', jobDescription);
+                    formData.append('linkedin_data', linkedinFile);
+
+                    response = await fetch('/api/generate-resume', {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    response = await fetch('/api/generate-resume', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            github_username: github,
+                            linkedin_url: linkedin,
+                            job_description: jobDescription
+                        })
+                    });
+                }
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.error || 'Failed to generate resume');
@@ -242,26 +264,30 @@ def generate_resume():
     """
     Main endpoint to generate a tailored resume
 
-    Expected JSON payload:
-    {
-        "github_username": "username",
-        "linkedin_url": "https://linkedin.com/in/username",
-        "job_description": "Job description text..."
-    }
+    Expected payload:
+    - JSON: {"github_username": "...", "linkedin_url": "...", "job_description": "..."}
+    - OR Multipart: form fields github_username, linkedin_url, job_description AND optional file linkedin_data
     """
     try:
-        data = request.json
-        github_username = data.get("github_username", "").strip()
-        linkedin_url = data.get("linkedin_url", "").strip()
-        job_description = data.get("job_description", "").strip()
+        linkedin_file = None
+        if request.content_type and "multipart/form-data" in request.content_type:
+            github_username = request.form.get("github_username", "").strip()
+            linkedin_url = request.form.get("linkedin_url", "").strip()
+            job_description = request.form.get("job_description", "").strip()
+            linkedin_file = request.files.get("linkedin_data")
+        else:
+            data = request.json
+            github_username = data.get("github_username", "").strip()
+            linkedin_url = data.get("linkedin_url", "").strip()
+            job_description = data.get("job_description", "").strip()
 
         if not job_description:
             return jsonify({"error": "Job description is required"}), 400
 
-        if not github_username and not linkedin_url:
+        if not github_username and not linkedin_url and not linkedin_file:
             return (
                 jsonify(
-                    {"error": "At least one profile (GitHub or LinkedIn) is required"}
+                    {"error": "At least one profile or data export is required"}
                 ),
                 400,
             )
@@ -273,7 +299,22 @@ def generate_resume():
             github_data = github_scraper.scrape_profile(github_username)
             profile_data["github"] = github_data
 
-        if linkedin_url:
+        # LinkedIn Data Handling (File Export or URL)
+        if linkedin_file and linkedin_file.filename:
+            # Save file temporarily
+            upload_dir = "uploads"
+            os.makedirs(upload_dir, exist_ok=True)
+            temp_filename = f"{uuid.uuid4()}_{linkedin_file.filename}"
+            file_path = os.path.join(upload_dir, temp_filename)
+            linkedin_file.save(file_path)
+
+            linkedin_data = linkedin_scraper.parse_export(file_path)
+            profile_data["linkedin"] = linkedin_data
+
+            # Cleanup
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        elif linkedin_url:
             linkedin_data = linkedin_scraper.scrape_profile(linkedin_url)
             profile_data["linkedin"] = linkedin_data
 
