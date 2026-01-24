@@ -64,7 +64,7 @@ class TestInputValidator:
 
     def test_job_description_cleanup(self):
         """Test job description cleanup"""
-        desc = "  Job description with spaces  "
+        desc = "  Job description with spaces and enough characters to meet minimum requirement  "
         result = InputValidator.validate_job_description(desc)
         assert result == desc.strip()
 
