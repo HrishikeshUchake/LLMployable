@@ -37,6 +37,11 @@ class LinkedInScraper:
         # Extract username from URL
         username = self._extract_username(linkedin_url)
         
+        # Log warning about placeholder usage
+        print("Warning: LinkedIn scraper is using placeholder data. "
+              "LinkedIn scraping requires API access or manual data export. "
+              "For best results, set up LinkedIn API access or ask users to provide their data.")
+        
         # Return placeholder data
         # In production, this would fetch real data from LinkedIn API
         return {

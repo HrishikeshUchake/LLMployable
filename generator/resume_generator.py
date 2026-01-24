@@ -20,7 +20,12 @@ class ResumeGenerator:
             self.model = None
         else:
             genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel('gemini-pro')
+            # Using gemini-1.5-pro for better performance
+            # Falls back to gemini-pro if not available
+            try:
+                self.model = genai.GenerativeModel('gemini-1.5-pro')
+            except Exception:
+                self.model = genai.GenerativeModel('gemini-pro')
     
     def generate(self, profile_data: Dict, job_requirements: Dict) -> Dict:
         """
