@@ -54,12 +54,16 @@ class LaTeXCompiler:
             )
 
             if result.returncode != 0:
-                print(f"LaTeX compilation warning/error:\n{result.stdout}\n{result.stderr}")
+                print(
+                    f"LaTeX compilation warning/error:\n{result.stdout}\n{result.stderr}"
+                )
 
             if os.path.exists(pdf_file):
                 return pdf_file
             else:
-                raise Exception(f"PDF file was not generated. Return code: {result.returncode}")
+                raise Exception(
+                    f"PDF file was not generated. Return code: {result.returncode}"
+                )
 
         except FileNotFoundError:
             # pdflatex not installed, create a simple text file as fallback
@@ -115,11 +119,15 @@ class LaTeXCompiler:
         if location:
             contact_items.append(location)
         if email:
-            contact_items.append(f"\\href{{mailto:{content.get('email', '')}}}{{\\underline{{{email}}}}}")
+            contact_items.append(
+                f"\\href{{mailto:{content.get('email', '')}}}{{\\underline{{{email}}}}}"
+            )
         if github:
             github_display = github.replace("https://", "").replace("http://", "")
-            contact_items.append(f"\\href{{https://{github}}}{{\\underline{{{github_display}}}}}")
-        
+            contact_items.append(
+                f"\\href{{https://{github}}}{{\\underline{{{github_display}}}}}"
+            )
+
         contact_line = " $|$ ".join(contact_items)
 
         # Build Experience items
@@ -162,11 +170,13 @@ class LaTeXCompiler:
         for proj in projects[:4]:
             p_name = sanitize_latex(proj.get("name", "Project"))
             p_desc = sanitize_latex(proj.get("description", ""))
-            p_tech = ", ".join([sanitize_latex(t) for t in proj.get("technologies", [])])
+            p_tech = ", ".join(
+                [sanitize_latex(t) for t in proj.get("technologies", [])]
+            )
             proj_title = f"\\textbf{{{p_name}}}"
             if p_tech:
                 proj_title += f" $|$ \\emph{{{p_tech}}}"
-            
+
             proj_latex += f"    \\resumeProjectHeading\n      {{{proj_title}}}{{}}\n      \\resumeItemListStart\n"
             # Split description into bullets if needed
             bullets = [b.strip() for b in p_desc.split("\n") if b.strip()]
@@ -180,7 +190,9 @@ class LaTeXCompiler:
         # Build Certifications
         cert_items = []
         for cert in certifications[:5]:
-            cert_items.append(f"\\resumeProjectHeading\n      {{\\textbf{{{sanitize_latex(cert)}}}}}{{}}")
+            cert_items.append(
+                f"\\resumeProjectHeading\n      {{\\textbf{{{sanitize_latex(cert)}}}}}{{}}"
+            )
         cert_latex = "\n".join(cert_items)
 
         # Build Languages
@@ -335,7 +347,9 @@ Professional Experience:
         for proj in projects[:5]:
             text += f"  {proj.get('name', 'Project')}\n"
             text += f"    {proj.get('description', '')}\n"
-            text += f"    Technologies: {', '.join(proj.get('technologies', [])[:5])}\n\n"
+            text += (
+                f"    Technologies: {', '.join(proj.get('technologies', [])[:5])}\n\n"
+            )
 
         text += "\nEducation:\n"
         for edu in education:
@@ -344,7 +358,7 @@ Professional Experience:
 
         if certifications:
             text += f"\nCertifications: {', '.join(certifications)}\n"
-        
+
         if languages:
             text += f"Languages: {', '.join(languages)}\n"
 

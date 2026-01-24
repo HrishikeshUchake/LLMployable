@@ -40,7 +40,7 @@ class LinkedInScraper:
             "education": [],
             "skills": [],
             "source": "manual_export",
-            "full_data": {}  # Store all other CSV data here
+            "full_data": {},  # Store all other CSV data here
         }
 
         try:
@@ -48,9 +48,9 @@ class LinkedInScraper:
                 for file_info in z.infolist():
                     if not file_info.filename.endswith(".csv"):
                         continue
-                    
+
                     filename = file_info.filename
-                    
+
                     # Skip connections as requested
                     if "Connections.csv" in filename:
                         continue
@@ -61,66 +61,80 @@ class LinkedInScraper:
                             content = io.TextIOWrapper(f, encoding="utf-8-sig")
                             reader = csv.DictReader(content)
                             rows = list(reader)
-                            
+
                             # Standard assignments for known files
                             if "Profile.csv" in filename and rows:
                                 row = rows[0]
-                                profile_data["name"] = f"{row.get('First Name', '')} {row.get('Last Name', '')}".strip()
+                                profile_data[
+                                    "name"
+                                ] = f"{row.get('First Name', '')} {row.get('Last Name', '')}".strip()
                                 profile_data["headline"] = row.get("Headline", "")
                                 profile_data["summary"] = row.get("Summary", "")
-                            
+
                             elif "Positions.csv" in filename:
                                 for row in rows:
-                                    profile_data["experience"].append({
-                                        "title": row.get("Title", ""),
-                                        "company": row.get("Company Name", ""),
-                                        "location": row.get("Location", ""),
-                                        "start_date": row.get("Started On", ""),
-                                        "end_date": row.get("Finished On", ""),
-                                        "description": row.get("Description", ""),
-                                    })
-                            
+                                    profile_data["experience"].append(
+                                        {
+                                            "title": row.get("Title", ""),
+                                            "company": row.get("Company Name", ""),
+                                            "location": row.get("Location", ""),
+                                            "start_date": row.get("Started On", ""),
+                                            "end_date": row.get("Finished On", ""),
+                                            "description": row.get("Description", ""),
+                                        }
+                                    )
+
                             elif "Education.csv" in filename:
                                 for row in rows:
-                                    profile_data["education"].append({
-                                        "school": row.get("School Name", ""),
-                                        "degree": row.get("Degree Name", ""),
-                                        "notes": row.get("Notes", ""),
-                                        "field_of_study": row.get("Notes", ""), # Fallback
-                                        "start_date": row.get("Started On", ""),
-                                        "end_date": row.get("Finished On", ""),
-                                    })
-                            
+                                    profile_data["education"].append(
+                                        {
+                                            "school": row.get("School Name", ""),
+                                            "degree": row.get("Degree Name", ""),
+                                            "notes": row.get("Notes", ""),
+                                            "field_of_study": row.get(
+                                                "Notes", ""
+                                            ),  # Fallback
+                                            "start_date": row.get("Started On", ""),
+                                            "end_date": row.get("Finished On", ""),
+                                        }
+                                    )
+
                             elif "Skills.csv" in filename:
                                 for row in rows:
                                     skill_name = row.get("Name", "")
                                     if skill_name:
                                         profile_data["skills"].append(skill_name)
-                            
+
                             elif "Projects.csv" in filename:
                                 if "projects" not in profile_data:
                                     profile_data["projects"] = []
                                 for row in rows:
-                                    profile_data["projects"].append({
-                                        "title": row.get("Title", ""),
-                                        "description": row.get("Description", ""),
-                                        "url": row.get("URL", ""),
-                                        "start_date": row.get("Started On", ""),
-                                        "end_date": row.get("Finished On", ""),
-                                    })
+                                    profile_data["projects"].append(
+                                        {
+                                            "title": row.get("Title", ""),
+                                            "description": row.get("Description", ""),
+                                            "url": row.get("URL", ""),
+                                            "start_date": row.get("Started On", ""),
+                                            "end_date": row.get("Finished On", ""),
+                                        }
+                                    )
 
                             elif "Certifications.csv" in filename:
                                 if "certifications" not in profile_data:
                                     profile_data["certifications"] = []
                                 for row in rows:
-                                    profile_data["certifications"].append({
-                                        "name": row.get("Name", ""),
-                                        "authority": row.get("Authority", ""),
-                                        "license_number": row.get("License Number", ""),
-                                        "url": row.get("Url", ""),
-                                        "start_date": row.get("Started On", ""),
-                                        "end_date": row.get("Finished On", ""),
-                                    })
+                                    profile_data["certifications"].append(
+                                        {
+                                            "name": row.get("Name", ""),
+                                            "authority": row.get("Authority", ""),
+                                            "license_number": row.get(
+                                                "License Number", ""
+                                            ),
+                                            "url": row.get("Url", ""),
+                                            "start_date": row.get("Started On", ""),
+                                            "end_date": row.get("Finished On", ""),
+                                        }
+                                    )
 
                             elif "Languages.csv" in filename:
                                 if "languages" not in profile_data:
@@ -129,19 +143,23 @@ class LinkedInScraper:
                                     lang = row.get("Name", "")
                                     prof = row.get("Proficiency", "")
                                     if lang:
-                                        profile_data["languages"].append(f"{lang} ({prof})" if prof else lang)
+                                        profile_data["languages"].append(
+                                            f"{lang} ({prof})" if prof else lang
+                                        )
 
                             elif "Honors.csv" in filename:
                                 if "awards" not in profile_data:
                                     profile_data["awards"] = []
                                 for row in rows:
-                                    profile_data["awards"].append({
-                                        "title": row.get("Title", ""),
-                                        "issuer": row.get("Issuer", ""),
-                                        "date": row.get("Issued On", ""),
-                                        "description": row.get("Description", ""),
-                                    })
-                            
+                                    profile_data["awards"].append(
+                                        {
+                                            "title": row.get("Title", ""),
+                                            "issuer": row.get("Issuer", ""),
+                                            "date": row.get("Issued On", ""),
+                                            "description": row.get("Description", ""),
+                                        }
+                                    )
+
                             # Store everything else in full_data
                             key = filename.replace(".csv", "").replace(" ", "_").lower()
                             profile_data["full_data"][key] = rows

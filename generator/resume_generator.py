@@ -51,8 +51,7 @@ class ResumeGenerator:
             response = self.model.generate_content(prompt)
 
             # Parse the response
-            resume_content = self._parse_gemini_response(
-                response.text, profile_data)
+            resume_content = self._parse_gemini_response(response.text, profile_data)
 
             return resume_content
 
@@ -66,43 +65,52 @@ class ResumeGenerator:
         linkedin_data = profile_data.get("linkedin", {})
 
         # Merge skills
-        github_languages = [lang for lang, _ in github_data.get('languages', [])]
-        linkedin_skills = linkedin_data.get('skills', [])
+        github_languages = [lang for lang, _ in github_data.get("languages", [])]
+        linkedin_skills = linkedin_data.get("skills", [])
         all_candidate_skills = list(set(github_languages + linkedin_skills))
 
         # Format LinkedIn Experience
         experience_text = ""
-        for exp in linkedin_data.get('experience', []):
+        for exp in linkedin_data.get("experience", []):
             experience_text += f"- {exp.get('title')} at {exp.get('company')} ({exp.get('start_date')} - {exp.get('end_date')}): {exp.get('description')}\n"
 
         # Format Education
         education_text = ""
-        for edu in linkedin_data.get('education', []):
-            degree = edu.get('degree') or "Degree"
-            field = edu.get('field_of_study') or edu.get('notes')
-            school = edu.get('school') or "University"
+        for edu in linkedin_data.get("education", []):
+            degree = edu.get("degree") or "Degree"
+            field = edu.get("field_of_study") or edu.get("notes")
+            school = edu.get("school") or "University"
             dates = f"{edu.get('start_date', '')} - {edu.get('end_date', '')}"
-            
+
             education_text += f"- {degree}"
             if field:
                 education_text += f" in {field}"
             education_text += f" from {school} ({dates})\n"
 
         # Format LinkedIn Projects (if available)
-        linkedin_projects = linkedin_data.get('projects', [])
+        linkedin_projects = linkedin_data.get("projects", [])
         li_projects_text = ""
         for lp in linkedin_projects:
             li_projects_text += f"- {lp.get('title')}: {lp.get('description')} ({lp.get('start_date')} - {lp.get('end_date')})\n"
 
         # Format Other LinkedIn Data
         additional_info = ""
-        full_data = linkedin_data.get('full_data', {})
+        full_data = linkedin_data.get("full_data", {})
         for category, items in full_data.items():
-            if category in ['profile', 'positions', 'education', 'skills', 'projects', 'connections']:
+            if category in [
+                "profile",
+                "positions",
+                "education",
+                "skills",
+                "projects",
+                "connections",
+            ]:
                 continue
             if items:
                 additional_info += f"\n{category.upper()}:\n"
-                for item in items[:10]:  # Limit to 10 items per category to avoid token bloat
+                for item in items[
+                    :10
+                ]:  # Limit to 10 items per category to avoid token bloat
                     # Clean up dictionary to string
                     item_str = ", ".join([f"{k}: {v}" for k, v in item.items() if v])
                     additional_info += f"- {item_str}\n"
@@ -211,9 +219,13 @@ Only return valid JSON, no additional text."""
                 linkedin_data = profile_data.get("linkedin", {})
 
                 # Prioritize LinkedIn data for formal name and location
-                parsed["name"] = linkedin_data.get("name") or github_data.get("name", "Your Name")
+                parsed["name"] = linkedin_data.get("name") or github_data.get(
+                    "name", "Your Name"
+                )
                 parsed["email"] = github_data.get("email", "")
-                parsed["location"] = linkedin_data.get("location") or github_data.get("location", "")
+                parsed["location"] = linkedin_data.get("location") or github_data.get(
+                    "location", ""
+                )
 
                 parsed["github_url"] = (
                     f"github.com/{github_data.get('username', '')}"
@@ -248,20 +260,29 @@ Only return valid JSON, no additional text."""
             job_skills_list.extend(skills)
 
         # Highlight matched skills
-        highlighted_skills = [s for s in all_candidate_skills if s.lower() in [js.lower() for js in job_skills_list]]
+        highlighted_skills = [
+            s
+            for s in all_candidate_skills
+            if s.lower() in [js.lower() for js in job_skills_list]
+        ]
         # Use a mix of matched skills and candidate's top tools
-        final_skills = (highlighted_skills + [s for s in all_candidate_skills if s not in highlighted_skills])[:15]
+        final_skills = (
+            highlighted_skills
+            + [s for s in all_candidate_skills if s not in highlighted_skills]
+        )[:15]
 
         # Format projects (prioritize LinkedIn, then GitHub)
         projects = []
-        
+
         # Add LinkedIn Experience/Projects as projects in the base resume
         for exp in linkedin_data.get("experience", [])[:3]:
-            projects.append({
-                "name": f"{exp.get('title')} at {exp.get('company')}",
-                "description": exp.get("description", ""),
-                "technologies": []
-            })
+            projects.append(
+                {
+                    "name": f"{exp.get('title')} at {exp.get('company')}",
+                    "description": exp.get("description", ""),
+                    "technologies": [],
+                }
+            )
 
         # Add GitHub projects
         for proj in github_data.get("top_projects", [])[:3]:
@@ -276,14 +297,16 @@ Only return valid JSON, no additional text."""
         return {
             "name": linkedin_data.get("name") or github_data.get("name", "Your Name"),
             "email": github_data.get("email", ""),
-            "location": linkedin_data.get("location") or github_data.get("location", ""),
+            "location": linkedin_data.get("location")
+            or github_data.get("location", ""),
             "github_url": (
                 f"github.com/{github_data.get('username', '')}"
                 if github_data.get("username")
                 else ""
             ),
             "linkedin_url": linkedin_data.get("url", ""),
-            "summary": linkedin_data.get("summary") or github_data.get("bio", "Experienced software developer"),
+            "summary": linkedin_data.get("summary")
+            or github_data.get("bio", "Experienced software developer"),
             "skills": final_skills,
             "projects": projects[:5],
         }

@@ -418,7 +418,11 @@ def generate_resume():
             github_username, job_description, linkedin_url
         )
 
-        if not github_username and not linkedin_url and not (linkedin_file and linkedin_file.filename):
+        if (
+            not github_username
+            and not linkedin_url
+            and not (linkedin_file and linkedin_file.filename)
+        ):
             raise ValidationError(
                 "Please provide at least one profile source (GitHub Username, LinkedIn URL, or LinkedIn Data Export zip file)"
             )

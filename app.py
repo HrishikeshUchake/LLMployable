@@ -286,9 +286,7 @@ def generate_resume():
 
         if not github_username and not linkedin_url and not linkedin_file:
             return (
-                jsonify(
-                    {"error": "At least one profile or data export is required"}
-                ),
+                jsonify({"error": "At least one profile or data export is required"}),
                 400,
             )
 
