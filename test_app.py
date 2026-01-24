@@ -13,6 +13,7 @@ try:
     from analyzer.job_analyzer import JobAnalyzer
     from generator.resume_generator import ResumeGenerator
     from generator.latex_compiler import LaTeXCompiler
+
     print("✅ All imports successful")
 except Exception as e:
     print(f"❌ Import error: {e}")
@@ -26,7 +27,9 @@ try:
     profile = scraper.scrape_profile("torvalds")
     print(f"✅ GitHub scraper working - Found profile: {profile.get('name')}")
     print(f"   - Repositories: {len(profile.get('repositories', []))}")
-    print(f"   - Languages: {', '.join([lang for lang, _ in profile.get('languages', [])[:3]])}")
+    print(
+        f"   - Languages: {', '.join([lang for lang, _ in profile.get('languages', [])[:3]])}"
+    )
 except Exception as e:
     print(f"❌ GitHub scraper error: {e}")
 
@@ -56,7 +59,7 @@ try:
     - Experience with machine learning
     - Contributions to open source
     """
-    
+
     result = analyzer.analyze(job_desc)
     print(f"✅ Job analyzer working")
     print(f"   - Skills found: {result.get('skills')}")
@@ -68,32 +71,32 @@ except Exception as e:
 print("\nTesting Resume Generator...")
 try:
     generator = ResumeGenerator()
-    
+
     # Mock profile data
     profile_data = {
-        'github': {
-            'name': 'John Doe',
-            'bio': 'Full-stack developer passionate about open source',
-            'location': 'San Francisco, CA',
-            'email': 'john@example.com',
-            'languages': [('Python', 10), ('JavaScript', 8), ('Go', 5)],
-            'top_projects': [
+        "github": {
+            "name": "John Doe",
+            "bio": "Full-stack developer passionate about open source",
+            "location": "San Francisco, CA",
+            "email": "john@example.com",
+            "languages": [("Python", 10), ("JavaScript", 8), ("Go", 5)],
+            "top_projects": [
                 {
-                    'name': 'awesome-project',
-                    'description': 'A cool web application',
-                    'language': 'Python',
-                    'stars': 100,
-                    'topics': ['web', 'django']
+                    "name": "awesome-project",
+                    "description": "A cool web application",
+                    "language": "Python",
+                    "stars": 100,
+                    "topics": ["web", "django"],
                 }
-            ]
+            ],
         }
     }
-    
+
     job_requirements = {
-        'skills': {'languages': ['python', 'javascript']},
-        'original_description': job_desc
+        "skills": {"languages": ["python", "javascript"]},
+        "original_description": job_desc,
     }
-    
+
     resume = generator.generate(profile_data, job_requirements)
     print(f"✅ Resume generator working")
     print(f"   - Name: {resume.get('name')}")
@@ -106,23 +109,23 @@ except Exception as e:
 print("\nTesting LaTeX Compiler...")
 try:
     compiler = LaTeXCompiler()
-    
+
     resume_content = {
-        'name': 'John Doe',
-        'email': 'john@example.com',
-        'location': 'San Francisco, CA',
-        'github_url': 'github.com/johndoe',
-        'summary': 'Experienced software engineer',
-        'skills': ['Python', 'JavaScript', 'React', 'Docker'],
-        'projects': [
+        "name": "John Doe",
+        "email": "john@example.com",
+        "location": "San Francisco, CA",
+        "github_url": "github.com/johndoe",
+        "summary": "Experienced software engineer",
+        "skills": ["Python", "JavaScript", "React", "Docker"],
+        "projects": [
             {
-                'name': 'Project 1',
-                'description': 'A test project',
-                'technologies': ['Python', 'Flask']
+                "name": "Project 1",
+                "description": "A test project",
+                "technologies": ["Python", "Flask"],
             }
-        ]
+        ],
     }
-    
+
     pdf_path = compiler.compile(resume_content)
     if os.path.exists(pdf_path):
         print(f"✅ LaTeX compiler working - PDF created at: {pdf_path}")
@@ -132,9 +135,9 @@ except Exception as e:
     print(f"⚠️  LaTeX compiler warning: {e}")
     print("   (This is expected if pdflatex is not installed)")
 
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("✅ All tests passed! Application is ready to use.")
-print("="*60)
+print("=" * 60)
 print("\nTo run the application:")
 print("1. Set GEMINI_API_KEY in .env file")
 print("2. Run: python app.py")

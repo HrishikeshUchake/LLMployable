@@ -18,47 +18,49 @@ class LinkedInScraper:
     def __init__(self):
         """Initialize LinkedIn scraper"""
         pass
-    
+
     def scrape_profile(self, linkedin_url: str) -> Dict:
         """
         Extract LinkedIn profile data
-        
+
         In this implementation, we return a placeholder structure.
         In production, this would:
         - Use LinkedIn's API with OAuth
         - Or parse user-uploaded LinkedIn data export
-        
+
         Args:
             linkedin_url: LinkedIn profile URL
-            
+
         Returns:
             Dictionary containing profile data
         """
         # Extract username from URL
         username = self._extract_username(linkedin_url)
-        
+
         # Log warning about placeholder usage
-        print("Warning: LinkedIn scraper is using placeholder data. "
-              "LinkedIn scraping requires API access or manual data export. "
-              "For best results, set up LinkedIn API access or ask users to provide their data.")
-        
+        print(
+            "Warning: LinkedIn scraper is using placeholder data. "
+            "LinkedIn scraping requires API access or manual data export. "
+            "For best results, set up LinkedIn API access or ask users to provide their data."
+        )
+
         # Return placeholder data
         # In production, this would fetch real data from LinkedIn API
         return {
-            'url': linkedin_url,
-            'username': username,
-            'name': '',
-            'headline': '',
-            'summary': '',
-            'experience': [],
-            'education': [],
-            'skills': [],
-            'note': 'LinkedIn scraping requires API access or manual data export'
+            "url": linkedin_url,
+            "username": username,
+            "name": "",
+            "headline": "",
+            "summary": "",
+            "experience": [],
+            "education": [],
+            "skills": [],
+            "note": "LinkedIn scraping requires API access or manual data export",
         }
-    
+
     def _extract_username(self, url: str) -> str:
         """Extract username from LinkedIn URL"""
-        match = re.search(r'linkedin\.com/in/([^/]+)', url)
+        match = re.search(r"linkedin\.com/in/([^/]+)", url)
         if match:
             return match.group(1)
         return url

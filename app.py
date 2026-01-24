@@ -230,16 +230,18 @@ HTML_TEMPLATE = """
 </html>
 """
 
-@app.route('/')
+
+@app.route("/")
 def index():
     """Serve the main HTML interface"""
     return render_template_string(HTML_TEMPLATE)
 
-@app.route('/api/generate-resume', methods=['POST'])
+
+@app.route("/api/generate-resume", methods=["POST"])
 def generate_resume():
     """
     Main endpoint to generate a tailored resume
-    
+
     Expected JSON payload:
     {
         "github_username": "username",
@@ -249,63 +251,74 @@ def generate_resume():
     """
     try:
         data = request.json
-        github_username = data.get('github_username', '').strip()
-        linkedin_url = data.get('linkedin_url', '').strip()
-        job_description = data.get('job_description', '').strip()
-        
+        github_username = data.get("github_username", "").strip()
+        linkedin_url = data.get("linkedin_url", "").strip()
+        job_description = data.get("job_description", "").strip()
+
         if not job_description:
-            return jsonify({'error': 'Job description is required'}), 400
-        
+            return jsonify({"error": "Job description is required"}), 400
+
         if not github_username and not linkedin_url:
-            return jsonify({'error': 'At least one profile (GitHub or LinkedIn) is required'}), 400
-        
+            return (
+                jsonify(
+                    {"error": "At least one profile (GitHub or LinkedIn) is required"}
+                ),
+                400,
+            )
+
         # Step 1: Scrape profiles
         profile_data = {}
-        
+
         if github_username:
             github_data = github_scraper.scrape_profile(github_username)
-            profile_data['github'] = github_data
-        
+            profile_data["github"] = github_data
+
         if linkedin_url:
             linkedin_data = linkedin_scraper.scrape_profile(linkedin_url)
-            profile_data['linkedin'] = linkedin_data
-        
+            profile_data["linkedin"] = linkedin_data
+
         # Step 2: Analyze job description
         job_requirements = job_analyzer.analyze(job_description)
-        
+
         # Step 3: Generate tailored resume content
         resume_content = resume_generator.generate(profile_data, job_requirements)
-        
+
         # Step 4: Compile to PDF
         pdf_path = latex_compiler.compile(resume_content)
-        
+
         # Validate that the PDF path is within the temp directory (security check)
-        abs_temp_dir = os.path.abspath('temp')
+        abs_temp_dir = os.path.abspath("temp")
         abs_pdf_path = os.path.abspath(pdf_path)
         if not abs_pdf_path.startswith(abs_temp_dir):
-            return jsonify({'error': 'Invalid file path'}), 500
-        
-        # Return the PDF file
-        return send_file(pdf_path, mimetype='application/pdf', as_attachment=True, 
-                        download_name='tailored_resume.pdf')
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+            return jsonify({"error": "Invalid file path"}), 500
 
-@app.route('/health')
+        # Return the PDF file
+        return send_file(
+            pdf_path,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="tailored_resume.pdf",
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/health")
 def health():
     """Health check endpoint"""
-    return jsonify({'status': 'healthy'})
+    return jsonify({"status": "healthy"})
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Create necessary directories
-    os.makedirs('temp', exist_ok=True)
-    
+    os.makedirs("temp", exist_ok=True)
+
     # Get configuration from environment
-    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
     # Default to localhost for security, can be overridden with FLASK_HOST=0.0.0.0
-    host = os.getenv('FLASK_HOST', '127.0.0.1')
-    port = int(os.getenv('FLASK_PORT', '5000'))
-    
+    host = os.getenv("FLASK_HOST", "127.0.0.1")
+    port = int(os.getenv("FLASK_PORT", "5000"))
+
     # Run the application
     app.run(debug=debug_mode, host=host, port=port)
