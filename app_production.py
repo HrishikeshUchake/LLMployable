@@ -63,8 +63,8 @@ cors_config = {
 CORS(app, resources={"/api/*": cors_config})
 
 # Configure Flask
-app.config['JSON_SORT_KEYS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB max request size
+app.config["JSON_SORT_KEYS"] = False
+app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50 MB max request size
 
 logger.info(f"Mployable starting in {config.ENVIRONMENT} mode")
 
@@ -293,7 +293,7 @@ def before_request():
 @app.after_request
 def after_request(response):
     """Log response details"""
-    if hasattr(request, 'start_time'):
+    if hasattr(request, "start_time"):
         duration = (datetime.utcnow() - request.start_time).total_seconds()
         api_logger.info(
             f"[{request.request_id}] {request.method} {request.path} "
@@ -306,68 +306,70 @@ def after_request(response):
 @app.errorhandler(MployableException)
 def handle_mployable_exception(error):
     """Handle application-specific exceptions"""
-    error_logger.warning(
-        f"[{request.request_id}] {error.error_code}: {error.message}"
-    )
+    error_logger.warning(f"[{request.request_id}] {error.error_code}: {error.message}")
     return jsonify(error.to_dict()), error.status_code
 
 
 @app.errorhandler(400)
 def bad_request(error):
     """Handle bad request errors"""
-    return jsonify({
-        'error': 'BAD_REQUEST',
-        'message': 'Invalid request format',
-        'status': 400
-    }), 400
+    return (
+        jsonify(
+            {"error": "BAD_REQUEST", "message": "Invalid request format", "status": 400}
+        ),
+        400,
+    )
 
 
 @app.errorhandler(404)
 def not_found(error):
     """Handle not found errors"""
-    return jsonify({
-        'error': 'NOT_FOUND',
-        'message': 'Endpoint not found',
-        'status': 404
-    }), 404
+    return (
+        jsonify({"error": "NOT_FOUND", "message": "Endpoint not found", "status": 404}),
+        404,
+    )
 
 
 @app.errorhandler(500)
 def internal_error(error):
     """Handle internal server errors"""
     error_logger.error(
-        f"[{request.request_id}] Unhandled exception: {error}",
-        exc_info=True
+        f"[{request.request_id}] Unhandled exception: {error}", exc_info=True
     )
-    return jsonify({
-        'error': 'INTERNAL_ERROR',
-        'message': 'An internal server error occurred',
-        'status': 500
-    }), 500
+    return (
+        jsonify(
+            {
+                "error": "INTERNAL_ERROR",
+                "message": "An internal server error occurred",
+                "status": 500,
+            }
+        ),
+        500,
+    )
 
 
 # Routes
-@app.route('/', methods=['GET'])
+@app.route("/", methods=["GET"])
 def index():
     """Serve the main HTML interface"""
     return render_template_string(HTML_TEMPLATE)
 
 
-@app.route('/api/v1/generate-resume', methods=['POST'])
+@app.route("/api/v1/generate-resume", methods=["POST"])
 def generate_resume():
     """
     Main endpoint to generate a tailored resume
-    
+
     Expected JSON payload:
     {
         "github_username": "username",
         "linkedin_url": "https://linkedin.com/in/username",
         "job_description": "Job description text..."
     }
-    
+
     Returns:
         PDF file: application/pdf
-        
+
     Errors:
         400: Validation error
         404: User not found
@@ -377,48 +379,56 @@ def generate_resume():
     try:
         # Parse and validate request
         data = request.get_json(force=True) if not request.json else request.json
-        
+
         if not data:
             raise InvalidJobDescription("Request body is empty")
-        
-        github_username = data.get('github_username', '').strip()
-        linkedin_url = data.get('linkedin_url', '').strip()
-        job_description = data.get('job_description', '').strip()
-        
+
+        github_username = data.get("github_username", "").strip()
+        linkedin_url = data.get("linkedin_url", "").strip()
+        job_description = data.get("job_description", "").strip()
+
         logger.info(f"[{request.request_id}] Resume generation request")
-        
+
         # Validate inputs
-        github_username, job_description, linkedin_url = InputValidator.validate_request(
-            github_username, job_description, linkedin_url
+        github_username, job_description, linkedin_url = (
+            InputValidator.validate_request(
+                github_username, job_description, linkedin_url
+            )
         )
-        
+
         logger.info(f"[{request.request_id}] Input validation passed")
-        
+
         # Step 1: Scrape profiles
         profile_data = {}
-        
+
         if github_username:
             try:
-                logger.debug(f"[{request.request_id}] Scraping GitHub profile: {github_username}")
+                logger.debug(
+                    f"[{request.request_id}] Scraping GitHub profile: {github_username}"
+                )
                 github_data = github_scraper.scrape_profile(github_username)
-                profile_data['github'] = github_data
-                logger.debug(f"[{request.request_id}] GitHub profile scraped successfully")
+                profile_data["github"] = github_data
+                logger.debug(
+                    f"[{request.request_id}] GitHub profile scraped successfully"
+                )
             except GitHubUserNotFound as e:
                 raise InvalidGitHubUsername(github_username)
             except GitHubAPIError as e:
                 logger.error(f"[{request.request_id}] GitHub API error: {e}")
                 raise
-        
+
         if linkedin_url:
             try:
                 logger.debug(f"[{request.request_id}] Scraping LinkedIn profile")
                 linkedin_data = linkedin_scraper.scrape_profile(linkedin_url)
-                profile_data['linkedin'] = linkedin_data
-                logger.debug(f"[{request.request_id}] LinkedIn profile scraped successfully")
+                profile_data["linkedin"] = linkedin_data
+                logger.debug(
+                    f"[{request.request_id}] LinkedIn profile scraped successfully"
+                )
             except Exception as e:
                 logger.warning(f"[{request.request_id}] LinkedIn scraping failed: {e}")
                 # Don't fail if LinkedIn scraping fails, continue with GitHub data
-        
+
         # Step 2: Analyze job description
         try:
             logger.debug(f"[{request.request_id}] Analyzing job description")
@@ -427,16 +437,18 @@ def generate_resume():
         except Exception as e:
             logger.error(f"[{request.request_id}] Job analysis failed: {e}")
             raise ResumeGenerationError("Failed to analyze job description")
-        
+
         # Step 3: Generate tailored resume content
         try:
             logger.debug(f"[{request.request_id}] Generating resume content")
             resume_content = resume_generator.generate(profile_data, job_requirements)
             logger.debug(f"[{request.request_id}] Resume content generated")
         except Exception as e:
-            logger.error(f"[{request.request_id}] Resume generation failed: {e}", exc_info=True)
+            logger.error(
+                f"[{request.request_id}] Resume generation failed: {e}", exc_info=True
+            )
             raise ResumeGenerationError(f"Failed to generate resume: {str(e)}")
-        
+
         # Step 4: Compile to PDF
         try:
             logger.debug(f"[{request.request_id}] Compiling LaTeX to PDF")
@@ -446,74 +458,86 @@ def generate_resume():
             logger.error(f"[{request.request_id}] LaTeX compilation failed: {e}")
             raise
         except Exception as e:
-            logger.error(f"[{request.request_id}] PDF compilation failed: {e}", exc_info=True)
+            logger.error(
+                f"[{request.request_id}] PDF compilation failed: {e}", exc_info=True
+            )
             raise LaTeXCompilationError("Failed to compile resume to PDF")
-        
+
         # Security: Validate that the PDF path is within the temp directory
         abs_temp_dir = os.path.abspath(config.TEMP_DIR)
         abs_pdf_path = os.path.abspath(pdf_path)
         if not abs_pdf_path.startswith(abs_temp_dir):
             logger.error(f"[{request.request_id}] Invalid file path: {abs_pdf_path}")
             raise ValueError("Invalid file path")
-        
+
         # Verify file exists
         if not os.path.exists(abs_pdf_path):
             logger.error(f"[{request.request_id}] PDF file not found: {abs_pdf_path}")
             raise ValueError("Generated PDF file not found")
-        
+
         logger.info(f"[{request.request_id}] Resume generated successfully")
-        
+
         # Return the PDF file
         return send_file(
             abs_pdf_path,
-            mimetype='application/pdf',
+            mimetype="application/pdf",
             as_attachment=True,
-            download_name=f'tailored_resume_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+            download_name=f'tailored_resume_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf',
         )
-        
+
     except MployableException:
         # Re-raise application exceptions
         raise
     except Exception as e:
         logger.error(f"[{request.request_id}] Unexpected error: {e}", exc_info=True)
-        return jsonify({
-            'error': 'INTERNAL_ERROR',
-            'message': 'An unexpected error occurred during resume generation',
-            'status': 500
-        }), 500
+        return (
+            jsonify(
+                {
+                    "error": "INTERNAL_ERROR",
+                    "message": "An unexpected error occurred during resume generation",
+                    "status": 500,
+                }
+            ),
+            500,
+        )
 
 
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
     """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
-        'version': config.VERSION
-    }), 200
+    return (
+        jsonify(
+            {
+                "status": "healthy",
+                "timestamp": datetime.utcnow().isoformat(),
+                "version": config.VERSION,
+            }
+        ),
+        200,
+    )
 
 
-@app.route('/health/detailed', methods=['GET'])
+@app.route("/health/detailed", methods=["GET"])
 def health_detailed():
     """Detailed health check endpoint"""
     health_status = {
-        'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
-        'version': config.VERSION,
-        'components': {
-            'github_scraper': 'available',
-            'linkedin_scraper': 'available',
-            'job_analyzer': 'available',
-            'resume_generator': 'available',
-            'latex_compiler': 'available',
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": config.VERSION,
+        "components": {
+            "github_scraper": "available",
+            "linkedin_scraper": "available",
+            "job_analyzer": "available",
+            "resume_generator": "available",
+            "latex_compiler": "available",
         },
-        'environment': config.ENVIRONMENT
+        "environment": config.ENVIRONMENT,
     }
-    
+
     return jsonify(health_status), 200
 
 
-@app.route('/api/v1/health', methods=['GET'])
+@app.route("/api/v1/health", methods=["GET"])
 def api_health():
     """API health endpoint"""
     return health()
@@ -524,22 +548,17 @@ def create_app():
     return app
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Create necessary directories
     os.makedirs(config.TEMP_DIR, exist_ok=True)
     os.makedirs(config.LOG_DIR, exist_ok=True)
     os.makedirs(config.UPLOAD_DIR, exist_ok=True)
-    
+
     logger.info(f"Starting Mployable v{config.VERSION}")
     logger.info(f"Environment: {config.ENVIRONMENT}")
     logger.info(f"Debug mode: {config.DEBUG}")
-    
+
     # Run the application
     # In production, use a WSGI server like gunicorn instead:
     # gunicorn -w 4 -b 0.0.0.0:5000 app_production:create_app()
-    app.run(
-        debug=config.DEBUG,
-        host=config.HOST,
-        port=config.PORT,
-        threaded=True
-    )
+    app.run(debug=config.DEBUG, host=config.HOST, port=config.PORT, threaded=True)
