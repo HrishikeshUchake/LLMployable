@@ -54,3 +54,8 @@ sentry-sdk==1.38.0
 # Documentation
 sphinx==7.2.6
 sphinx-rtd-theme==2.0.0
+black==23.12.1
+flake8
+mypy
+pytest
+pytest-cov

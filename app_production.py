@@ -390,10 +390,12 @@ def generate_resume():
         logger.info(f"[{request.request_id}] Resume generation request")
 
         # Validate inputs
-        github_username, job_description, linkedin_url = (
-            InputValidator.validate_request(
-                github_username, job_description, linkedin_url
-            )
+        (
+            github_username,
+            job_description,
+            linkedin_url,
+        ) = InputValidator.validate_request(
+            github_username, job_description, linkedin_url
         )
 
         logger.info(f"[{request.request_id}] Input validation passed")
