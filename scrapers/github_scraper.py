@@ -78,12 +78,16 @@ class GitHubScraper:
             return profile_data
             
         except Exception as e:
-            print(f"Error scraping GitHub profile: {e}")
+            error_msg = str(e)
+            print(f"Error scraping GitHub profile: {error_msg}")
             return {
                 'name': username,
                 'bio': '',
-                'error': str(e),
+                'error': error_msg,
                 'repositories': [],
                 'languages': [],
-                'top_projects': []
+                'top_projects': [],
+                'location': '',
+                'email': '',
+                'public_repos': 0
             }
