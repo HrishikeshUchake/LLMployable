@@ -130,7 +130,7 @@ Only return valid JSON, no additional text."""
                 parsed['name'] = github_data.get('name', 'Your Name')
                 parsed['email'] = github_data.get('email', '')
                 parsed['location'] = github_data.get('location', '')
-                parsed['github_url'] = f"github.com/{github_data.get('name', '')}" if github_data.get('name') else ''
+                parsed['github_url'] = f"github.com/{github_data.get('username', '')}" if github_data.get('username') else ''
                 parsed['linkedin_url'] = profile_data.get('linkedin', {}).get('url', '')
                 
                 return parsed
@@ -170,7 +170,7 @@ Only return valid JSON, no additional text."""
             'name': github_data.get('name', 'Your Name'),
             'email': github_data.get('email', ''),
             'location': github_data.get('location', ''),
-            'github_url': f"github.com/{github_data.get('name', '')}" if github_data.get('name') else '',
+            'github_url': f"github.com/{github_data.get('username', '')}" if github_data.get('username') else '',
             'linkedin_url': linkedin_data.get('url', ''),
             'summary': github_data.get('bio', 'Experienced software developer'),
             'skills': all_skills[:15],

@@ -34,6 +34,7 @@ class GitHubScraper:
             
             # Get user information
             profile_data = {
+                'username': username,  # Store the actual username
                 'name': user.name or username,
                 'bio': user.bio or '',
                 'location': user.location or '',
@@ -81,6 +82,7 @@ class GitHubScraper:
             error_msg = str(e)
             print(f"Error scraping GitHub profile: {error_msg}")
             return {
+                'username': username,  # Store the actual username
                 'name': username,
                 'bio': '',
                 'error': error_msg,

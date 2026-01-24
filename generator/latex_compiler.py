@@ -71,12 +71,34 @@ class LaTeXCompiler:
     def _generate_latex(self, content: Dict) -> str:
         """Generate LaTeX code for resume"""
         
-        name = content.get('name', 'Your Name')
-        email = content.get('email', '')
-        location = content.get('location', '')
-        github = content.get('github_url', '')
-        linkedin = content.get('linkedin_url', '')
-        summary = content.get('summary', '')
+        # Sanitize all text inputs to prevent LaTeX injection
+        def sanitize_latex(text: str) -> str:
+            """Escape special LaTeX characters"""
+            if not text:
+                return ''
+            # Escape special LaTeX characters
+            replacements = {
+                '\\': r'\textbackslash{}',
+                '&': r'\&',
+                '%': r'\%',
+                '$': r'\$',
+                '#': r'\#',
+                '_': r'\_',
+                '{': r'\{',
+                '}': r'\}',
+                '~': r'\textasciitilde{}',
+                '^': r'\textasciicircum{}',
+            }
+            for char, replacement in replacements.items():
+                text = text.replace(char, replacement)
+            return text
+        
+        name = sanitize_latex(content.get('name', 'Your Name'))
+        email = sanitize_latex(content.get('email', ''))
+        location = sanitize_latex(content.get('location', ''))
+        github = sanitize_latex(content.get('github_url', ''))
+        linkedin = sanitize_latex(content.get('linkedin_url', ''))
+        summary = sanitize_latex(content.get('summary', ''))
         skills = content.get('skills', [])
         projects = content.get('projects', [])
         
@@ -94,15 +116,15 @@ class LaTeXCompiler:
         contact_line = " $|$ ".join(contact_parts)
         
         # Build skills section
-        skills_text = ", ".join(skills[:15]) if skills else "Python, JavaScript, Git"
+        skills_text = ", ".join([sanitize_latex(s) for s in skills[:15]]) if skills else "Python, JavaScript, Git"
         
         # Build projects section
         projects_section = ""
         for proj in projects[:5]:
-            proj_name = proj.get('name', 'Project')
-            proj_desc = proj.get('description', 'Project description')
+            proj_name = sanitize_latex(proj.get('name', 'Project'))
+            proj_desc = sanitize_latex(proj.get('description', 'Project description'))
             proj_tech = proj.get('technologies', [])
-            tech_str = ", ".join(proj_tech[:5]) if proj_tech else ""
+            tech_str = ", ".join([sanitize_latex(t) for t in proj_tech[:5]]) if proj_tech else ""
             
             projects_section += f"""
 \\textbf{{{proj_name}}} \\\\

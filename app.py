@@ -278,6 +278,13 @@ def generate_resume():
         # Step 4: Compile to PDF
         pdf_path = latex_compiler.compile(resume_content)
         
+        # Validate that the PDF path is within the temp directory (security check)
+        import os.path
+        abs_temp_dir = os.path.abspath('temp')
+        abs_pdf_path = os.path.abspath(pdf_path)
+        if not abs_pdf_path.startswith(abs_temp_dir):
+            return jsonify({'error': 'Invalid file path'}), 500
+        
         # Return the PDF file
         return send_file(pdf_path, mimetype='application/pdf', as_attachment=True, 
                         download_name='tailored_resume.pdf')

@@ -51,6 +51,7 @@ github_scraper = GitHubScraper()
 # For demo purposes, using a placeholder
 profile_data = {
     'github': {
+        'username': 'demo-user',  # Actual GitHub username
         'name': 'Demo User',
         'bio': 'Full-stack developer with a passion for building scalable web applications',
         'location': 'San Francisco, CA',
