@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Rocket, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Rocket, LogOut, LayoutDashboard, Menu, X, Mic } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +11,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, protected: true },
+    { name: 'Mock Interview', path: '/mock-interview', icon: Mic, protected: true },
   ];
 
   return (

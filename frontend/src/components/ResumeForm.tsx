@@ -1,5 +1,6 @@
 import { useState, useActionState, useEffect } from 'react';
-import { Github, Linkedin, Briefcase, Download, Loader2, Rocket, AlertCircle, CheckCircle2, Info, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Github, Linkedin, Briefcase, Download, Loader2, Rocket, AlertCircle, CheckCircle2, Info, ArrowRight, ShieldCheck, Mic, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -107,6 +108,7 @@ async function generateResumeAction(_prevState: ActionState, formData: FormData)
 }
 
 export default function ResumeForm() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [state, formAction, isPending] = useActionState(generateResumeAction, {
     type: 'idle',
@@ -255,6 +257,34 @@ export default function ResumeForm() {
                     {state.type === 'success' && state.interviewPrep && (
                       <div className="mt-12 pt-12 border-t border-muted">
                         <InterviewPrepPlan data={state.interviewPrep} />
+                        
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="mt-12 p-10 bg-gradient-to-br from-primary to-primary-dark rounded-[3rem] text-white shadow-2xl relative overflow-hidden group"
+                        >
+                          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                              <Mic className="w-40 h-40 -rotate-12" />
+                          </div>
+                          
+                          <div className="relative z-10">
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-black uppercase tracking-widest mb-6">
+                              <Sparkles className="w-3 h-3" /> New: Conversational AI
+                            </span>
+                            <h3 className="text-3xl font-black tracking-tighter mb-4">Ready for the real deal?</h3>
+                            <p className="text-white/80 font-medium mb-8 max-w-xl text-lg leading-relaxed">
+                              Don't just read the questions. Practice them with our **AI Mock Interviewer**. 
+                              Powered by ElevenLabs, you'll get real-time feedback on your voice, tone, and confidence.
+                            </p>
+                            <button 
+                              onClick={() => navigate('/mock-interview')}
+                              className="bg-white text-primary px-8 py-4 rounded-2xl font-black text-lg hover:bg-opacity-90 transform active:scale-95 transition-all flex items-center gap-3 shadow-xl"
+                            >
+                              Start Voice Interview <ArrowRight className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </motion.div>
                       </div>
                     )}
                   </motion.div>

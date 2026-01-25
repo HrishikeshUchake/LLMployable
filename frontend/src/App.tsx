@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ResumeForm from './components/ResumeForm';
+import MockInterview from './components/MockInterview';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import Dashboard from './components/Dashboard';
@@ -91,6 +92,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
+              <Route path="/mock-interview" element={<ProtectedRoute><MockInterview /></ProtectedRoute>} />
               <Route 
                 path="/dashboard" 
                 element={

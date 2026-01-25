@@ -608,6 +608,20 @@ def generate_resume():
         )
 
 
+@app.route("/api/config/elevenlabs", methods=["GET"])
+@app.route("/api/v1/config/elevenlabs", methods=["GET"])
+def get_elevenlabs_config():
+    """Return ElevenLabs Agent ID for the mock interview"""
+    config = get_config()
+    agent_id = getattr(config, "ELEVENLABS_AGENT_ID", None)
+    if not agent_id:
+        agent_id = os.getenv("ELEVENLABS_AGENT_ID")
+        
+    if not agent_id:
+        return jsonify({"error": "ElevenLabs Agent ID not configured"}), 404
+    return jsonify({"agentId": agent_id})
+
+
 @app.route("/api/v1/interview-prep", methods=["POST"])
 def interview_prep():
     """

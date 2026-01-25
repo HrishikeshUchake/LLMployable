@@ -75,6 +75,10 @@ class Config:
     GEMINI_MAX_TOKENS = 2000
     GEMINI_TEMPERATURE = 0.7
 
+    # ElevenLabs Conversational AI
+    ELEVENLABS_AGENT_ID = None
+    ELEVENLABS_API_KEY = None
+
     # Resume Generation
     MAX_RESUME_SIZE_MB = 10
     RESUME_TIMEOUT = 300  # 5 minutes
@@ -141,6 +145,10 @@ class Config:
         cls.GEMINI_API_TIMEOUT = int(
             os.getenv("GEMINI_API_TIMEOUT", cls.GEMINI_API_TIMEOUT)
         )
+
+        # ElevenLabs
+        cls.ELEVENLABS_AGENT_ID = os.getenv("ELEVENLABS_AGENT_ID", cls.ELEVENLABS_AGENT_ID)
+        cls.ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", cls.ELEVENLABS_API_KEY)
 
         # Cache
         cls.CACHE_ENABLED = get_bool("CACHE_ENABLED", cls.CACHE_ENABLED)

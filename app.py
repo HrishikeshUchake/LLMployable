@@ -22,9 +22,11 @@ from analyzer.interview_generator import InterviewGenerator
 from generator.resume_generator import ResumeGenerator
 from generator.latex_compiler import LaTeXCompiler
 from config.logging_config import setup_logging
+from config.config import Config
 
 # Load environment variables
 load_dotenv()
+Config.from_env()
 
 app = Flask(__name__)
 CORS(app)
@@ -444,6 +446,20 @@ def generate_resume():
     except Exception as e:
         logger.error(f"[{rid}] Generation failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/config/elevenlabs", methods=["GET"])
+@app.route("/api/v1/config/elevenlabs", methods=["GET"])
+def get_elevenlabs_config():
+    """Return ElevenLabs Agent ID for the mock interview"""
+    agent_id = Config.ELEVENLABS_AGENT_ID
+    if not agent_id:
+        # Check env directly if not in Config for some reason
+        agent_id = os.getenv("ELEVENLABS_AGENT_ID")
+        
+    if not agent_id:
+        return jsonify({"error": "ElevenLabs Agent ID not configured"}), 404
+    return jsonify({"agentId": agent_id})
 
 
 @app.route("/api/interview-prep", methods=["POST"])
