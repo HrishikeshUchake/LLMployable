@@ -1,19 +1,21 @@
-# 🚀 LLMployable - AI-Powered Resume Builder
+# LLMployable - AI-Powered Resume Builder
 
 **LLMployable** is a sophisticated full-stack platform designed to automate the creation of hyper-tailored resumes. By leveraging LLM-based analysis and semantic matching, LLMployable bridges the gap between your technical profile (GitHub/LinkedIn) and specific job requirements.
 
-## ✨ Latest Features
+## Latest Features
 
 - **Modern Full-Stack Architecture**: React 19.2 frontend with Framer Motion animations and a robust Flask backend.
+- **AI-Powered Interview Preparation**: Generates tailored interview questions and preparation tips based on specific job descriptions.
+- **Interactive Mock Interviews**: Voice-enabled practice sessions integrated with ElevenLabs AI for realistic interview simulation.
 - **Semantic Tech-Stack Matching**: Intelligent selection of GitHub repositories that best align with job descriptions using skill scoring.
 - **Hybrid Profile Sourcing**: 
   - **GitHub**: Automatic repository scraping and language analysis.
   - **LinkedIn**: Structured data import via LinkedIn Data Export ZIP.
-- **MongoDB Persistence**: Full database integration for user profiles, resume versioning, job application tracking, and intelligence caching.
-- **Gemini AI Integration**: Advanced job description analysis to identify required skills and experience levels.
+- **MongoDB Persistence**: Full database integration for user profiles, resume versioning, job application tracking, and intelligence caching using MongoDB Atlas.
+- **Gemini AI Integration**: Advanced job description analysis to identify required skills and experience levels using Gemini 2.0 Flash models.
 - **Professional LaTeX Generation**: Dynamic compilation of resume content into high-quality, ATS-friendly PDFs.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend
 - **React 19.2**: Utilizing modern hooks and patterns.
@@ -21,6 +23,7 @@
 - **Tailwind CSS**: Utility-first CSS framework for clean, responsive UI.
 - **Framer Motion**: Smooth, high-performance web animations.
 - **Lucide React**: Clean and consistent iconography.
+- **ElevenLabs API**: AI-driven voice synthesis for mock interview simulations.
 
 ### Backend
 - **Python / Flask**: Scalable RESTful API service.
@@ -33,15 +36,15 @@
 - **Docker & Docker Compose**: Containerized environment for consistent deployment.
 - **Nginx**: High-performance web server and reverse proxy.
 
-## 📋 Prerequisites
+## Prerequisites
 
 - **Python 3.10+**
 - **Node.js 18+** & npm
-- **MongoDB**: Local instance or MongoDB Atlas URI.
+- **MongoDB**: Local instance or MongoDB Atlas URI (dnspython required).
 - **LaTeX Distribution**: TeX Live (Linux/macOS) or MiKTeX (Windows).
-- **Google Gemini API Key**: [Get one here](https://aistudio.google.com/app/apikey).
+- **API Keys**: Google Gemini API and optionally ElevenLabs API.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone & Setup Environments
 
@@ -87,14 +90,15 @@ npm run dev
 docker-compose up --build
 ```
 
-## 📖 How it Works
+## How it Works
 
 1. **Profile Connection**: Enter your GitHub username. LLMployable fetches your repos, languages, and contributions.
 2. **Contextual Input**: Provide your LinkedIn Data Export for professional experience.
 3. **Job Analysis**: Paste a job description. The AI extracts key requirements, tech stack, and experience levels.
 4. **Smart Selection**: LLMployable's semantic matcher identifies which of your GitHub projects most closely match the job's tech stack.
 5. **PDF Generation**: A customized LaTeX template is filled with the matched data and compiled into a downloadable PDF.
+6. **Interview Preparation**: Generate behavioral and technical questions tailored to the job, and practice with voice-enabled AI mock interviews.
 
 ---
 
-Built with ❤️ for developers who want to stand out.
+Built for developers who want to stand out.
