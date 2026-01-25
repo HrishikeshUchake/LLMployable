@@ -39,6 +39,9 @@ from config import (
 )
 from utils.validators import InputValidator
 
+# Import database
+from database import init_db
+
 # Import our modules
 from scrapers.github_scraper import GitHubScraper
 from scrapers.linkedin_scraper import LinkedInScraper
@@ -53,6 +56,9 @@ logger = get_logger(__name__)
 
 # Create Flask app
 app = Flask(__name__)
+
+# Initialize database
+init_db()
 
 # Configure CORS with security
 cors_config = {
@@ -385,11 +391,13 @@ def generate_resume():
     try:
         # Parse and validate request
         linkedin_file = None
+        user_id = None
 
         if request.content_type and "multipart/form-data" in request.content_type:
             github_username = request.form.get("github_username", "").strip()
             job_description = request.form.get("job_description", "").strip()
             linkedin_file = request.files.get("linkedin_data")
+            user_id = request.form.get("user_id")
         else:
             data = request.get_json(force=True) if not request.json else request.json
             if not data:
@@ -397,6 +405,7 @@ def generate_resume():
 
             github_username = data.get("github_username", "").strip()
             job_description = data.get("job_description", "").strip()
+            user_id = data.get("user_id")
 
         logger.info(f"[{request.request_id}] Resume generation request")
 
@@ -493,7 +502,7 @@ def generate_resume():
         # Step 4: Generate tailored resume content
         try:
             logger.debug(f"[{request.request_id}] Generating resume content")
-            resume_content = resume_generator.generate(profile_data, job_requirements)
+            resume_content = resume_generator.generate(profile_data, job_requirements, user_id=user_id)
             logger.debug(f"[{request.request_id}] Resume content generated")
         except Exception as e:
             logger.error(
@@ -526,6 +535,27 @@ def generate_resume():
         if not os.path.exists(abs_pdf_path):
             logger.error(f"[{request.request_id}] PDF file not found: {abs_pdf_path}")
             raise ValueError("Generated PDF file not found")
+
+        # Step 6: Create job application record if user is logged in
+        if user_id:
+            try:
+                from database.repositories import JobApplicationRepository
+                company = resume_content.get("basics", {}).get("company", "Target Company")
+                job_title = resume_content.get("basics", {}).get("label", "Software Engineer")
+                
+                job_url = request.form.get("job_url") if linkedin_file else data.get("job_url")
+
+                JobApplicationRepository.create_application(
+                    user_id=user_id,
+                    job_title=job_title,
+                    company=company,
+                    resume_id=str(getattr(resume_content, 'id', '')), # Or however we get it
+                    job_url=job_url,
+                    job_description=job_description
+                )
+                logger.debug(f"[{request.request_id}] Job application record created")
+            except Exception as e:
+                logger.error(f"[{request.request_id}] Failed to create job application record: {e}")
 
         logger.info(f"[{request.request_id}] Resume generated successfully")
 
@@ -592,6 +622,112 @@ def interview_prep():
             ),
             500,
         )
+
+
+@app.route("/api/v1/auth/register", methods=["POST"])
+def register():
+    """Register a new user"""
+    try:
+        from database.repositories import UserRepository
+        data = request.json
+        if not data:
+            return jsonify({"error": "VALIDATION_ERROR", "message": "Request body is required"}), 400
+            
+        email = data.get("email")
+        username = data.get("username")
+        password = data.get("password")
+        first_name = data.get("first_name", "")
+        last_name = data.get("last_name", "")
+
+        if not email or not username or not password:
+            return jsonify({"error": "VALIDATION_ERROR", "message": "Email, username, and password are required"}), 400
+
+        if UserRepository.get_user_by_email(email):
+            return jsonify({"error": "CONFLICT", "message": "Email already registered"}), 409
+
+        if UserRepository.get_user_by_username(username):
+            return jsonify({"error": "CONFLICT", "message": "Username already taken"}), 409
+
+        user = UserRepository.create_user(email, username, password, first_name, last_name)
+        return jsonify({
+            "message": "User registered successfully",
+            "user": {
+                "id": str(user.id),
+                "username": user.username,
+                "email": user.email
+            }
+        }), 201
+    except Exception as e:
+        logger.error(f"Registration failed: {e}", exc_info=True)
+        return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
+
+
+@app.route("/api/v1/auth/login", methods=["POST"])
+def login():
+    """Authenticate user"""
+    try:
+        from database.repositories import UserRepository
+        data = request.json
+        if not data:
+            return jsonify({"error": "VALIDATION_ERROR", "message": "Request body is required"}), 400
+            
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"error": "VALIDATION_ERROR", "message": "Username and password are required"}), 400
+
+        user = UserRepository.authenticate(username, password)
+        if not user:
+            return jsonify({"error": "UNAUTHORIZED", "message": "Invalid username or password"}), 401
+
+        return jsonify({
+            "message": "Login successful",
+            "user": {
+                "id": str(user.id),
+                "username": user.username,
+                "email": user.email
+            }
+        })
+    except Exception as e:
+        logger.error(f"Login failed: {e}", exc_info=True)
+        return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
+
+
+@app.route("/api/v1/user/resumes/<user_id>", methods=["GET"])
+def get_user_resumes(user_id):
+    """Get all resumes for a user"""
+    try:
+        from database.repositories import ResumeRepository
+        resumes = ResumeRepository.get_user_resumes(user_id)
+        return jsonify([{
+            "id": str(r.id),
+            "job_title": r.job_title,
+            "github_username": r.github_username,
+            "created_at": r.created_at.isoformat(),
+            "is_archived": r.is_archived
+        } for r in resumes])
+    except Exception as e:
+        logger.error(f"Failed to fetch user resumes: {e}", exc_info=True)
+        return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
+
+
+@app.route("/api/v1/user/applications/<user_id>", methods=["GET"])
+def get_user_applications(user_id):
+    """Get all job applications for a user"""
+    try:
+        from database.repositories import JobApplicationRepository
+        applications = JobApplicationRepository.get_user_applications(user_id)
+        return jsonify([{
+            "id": str(a.id),
+            "job_title": a.job_title,
+            "company": a.company,
+            "status": a.status,
+            "applied_date": a.applied_date.isoformat()
+        } for a in applications])
+    except Exception as e:
+        logger.error(f"Failed to fetch user applications: {e}", exc_info=True)
+        return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
 
 
 @app.route("/health", methods=["GET"])

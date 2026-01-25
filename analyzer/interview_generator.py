@@ -5,7 +5,7 @@ Uses Google Gemini AI to analyze job requirements and generate
 tailored interview preparation tips and sample questions.
 """
 
-import google.generativeai as genai
+from google import genai
 import os
 import json
 from typing import Dict, List
@@ -15,17 +15,18 @@ from config.config import get_config
 class InterviewGenerator:
     def __init__(self):
         """Initialize interview generator with Gemini API"""
-        config = get_config()
+        self.config = get_config()
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             print("Warning: GEMINI_API_KEY not found in environment variables")
-            self.model = None
+            self.client = None
         else:
-            genai.configure(api_key=api_key)
             try:
-                self.model = genai.GenerativeModel(config.GEMINI_MODEL)
+                self.client = genai.Client(api_key=api_key)
+                self.model_name = self.config.GEMINI_MODEL
             except Exception:
-                self.model = genai.GenerativeModel("gemini-pro")
+                self.client = genai.Client(api_key=api_key)
+                self.model_name = "gemini-2.0-flash"
 
     def generate(self, job_requirements: Dict) -> Dict:
         """
@@ -37,8 +38,8 @@ class InterviewGenerator:
         Returns:
             Dictionary containing structured interview prep content
         """
-        if not self.model:
-            print("InterviewGenerator: No model initialized, using basic prep")
+        if not self.client:
+            print("InterviewGenerator: No client initialized, using basic prep")
             return self._generate_basic_prep(job_requirements)
 
         try:
@@ -47,7 +48,10 @@ class InterviewGenerator:
             print(f"InterviewGenerator: Generating content with Gemini...")
 
             # Generate content using Gemini
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
             
             if not response or not response.text:
                 print("InterviewGenerator: Empty response from Gemini")

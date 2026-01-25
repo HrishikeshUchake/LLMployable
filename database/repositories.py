@@ -86,6 +86,7 @@ class ResumeRepository:
         job_title: str,
         job_description: str,
         tailored_content: Dict,
+        pdf_path: str = None,
     ) -> Resume:
         """Create a new resume"""
         resume = Resume(
@@ -94,6 +95,7 @@ class ResumeRepository:
             job_title=job_title,
             job_description=job_description,
             tailored_content=tailored_content,
+            pdf_path=pdf_path,
         )
         resume.save()
         logger.info(f"Resume created for user {user_id}: {resume.id}")
