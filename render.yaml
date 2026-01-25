@@ -5,7 +5,7 @@ services:
     env: docker
     dockerContext: .
     plan: free
-    region: oregon # Low latency for US/Global
+    region: oregon
     healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
@@ -21,14 +21,5 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: mployable-cache
-          property: connectionString
+        sync: false # Set this manually in Render Dashboard if you have an existing Redis
     autoDeploy: true
-
-  # Redis for profile caching (crucial for performance)
-  - type: redis
-    name: mployable-cache
-    plan: free
-    ipAllowList: []
