@@ -314,10 +314,11 @@ def before_request():
 @app.after_request
 def after_request(response):
     """Log response details"""
+    rid = getattr(request, "request_id", "unknown")
     if hasattr(request, "start_time"):
         duration = (datetime.utcnow() - request.start_time).total_seconds()
         api_logger.info(
-            f"[{request.request_id}] {request.method} {request.path} "
+            f"[{rid}] {request.method} {request.path} "
             f"{response.status_code} {duration:.3f}s"
         )
     return response
@@ -327,7 +328,8 @@ def after_request(response):
 @app.errorhandler(MployableException)
 def handle_mployable_exception(error):
     """Handle application-specific exceptions"""
-    error_logger.warning(f"[{request.request_id}] {error.error_code}: {error.message}")
+    rid = getattr(request, "request_id", "unknown")
+    error_logger.warning(f"[{rid}] {error.error_code}: {error.message}")
     return jsonify(error.to_dict()), error.status_code
 
 
@@ -354,8 +356,9 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     """Handle internal server errors"""
+    rid = getattr(request, "request_id", "unknown")
     error_logger.error(
-        f"[{request.request_id}] Unhandled exception: {error}", exc_info=True
+        f"[{rid}] Unhandled exception: {error}", exc_info=True
     )
     return (
         jsonify(
@@ -388,12 +391,14 @@ def generate_resume():
     Returns:
         PDF file: application/pdf
     """
+    rid = getattr(request, "request_id", "unknown")
     try:
         # Parse and validate request
         linkedin_file = None
         user_id = None
 
-        if request.content_type and "multipart/form-data" in request.content_type:
+        content_type = request.content_type or ""
+        if "multipart/form-data" in content_type:
             github_username = request.form.get("github_username", "").strip()
             job_description = request.form.get("job_description", "").strip()
             linkedin_file = request.files.get("linkedin_data")
@@ -407,7 +412,7 @@ def generate_resume():
             job_description = data.get("job_description", "").strip()
             user_id = data.get("user_id")
 
-        logger.info(f"[{request.request_id}] Resume generation request")
+        logger.info(f"[{rid}] Resume generation request")
 
         # Validate inputs
         (
@@ -425,7 +430,7 @@ def generate_resume():
                 "Please provide at least one profile source (GitHub Username or LinkedIn Data Export zip file)"
             )
 
-        logger.info(f"[{request.request_id}] Input validation passed")
+        logger.info(f"[{rid}] Input validation passed")
 
         # Step 1: Scrape profiles
         profile_data = {}
@@ -433,23 +438,23 @@ def generate_resume():
         if github_username:
             try:
                 logger.debug(
-                    f"[{request.request_id}] Scraping GitHub profile: {github_username}"
+                    f"[{rid}] Scraping GitHub profile: {github_username}"
                 )
                 github_data = github_scraper.scrape_profile(github_username)
                 profile_data["github"] = github_data
                 logger.debug(
-                    f"[{request.request_id}] GitHub profile scraped successfully"
+                    f"[{rid}] GitHub profile scraped successfully"
                 )
             except GitHubUserNotFound as e:
                 raise InvalidGitHubUsername(github_username)
             except GitHubAPIError as e:
-                logger.error(f"[{request.request_id}] GitHub API error: {e}")
+                logger.error(f"[{rid}] GitHub API error: {e}")
                 raise
 
         # LinkedIn Data Handling (File Export or URL)
         if linkedin_file and linkedin_file.filename:
             try:
-                logger.debug(f"[{request.request_id}] Parsing LinkedIn data export")
+                logger.debug(f"[{rid}] Parsing LinkedIn data export")
                 # Save file temporarily
                 temp_filename = f"{uuid.uuid4()}_{linkedin_file.filename}"
                 file_path = os.path.join(config.UPLOAD_DIR, temp_filename)
@@ -459,7 +464,7 @@ def generate_resume():
                 linkedin_data = linkedin_scraper.parse_export(file_path)
                 profile_data["linkedin"] = linkedin_data
                 logger.debug(
-                    f"[{request.request_id}] LinkedIn export parsed successfully"
+                    f"[{rid}] LinkedIn export parsed successfully"
                 )
 
                 # Cleanup
@@ -467,23 +472,23 @@ def generate_resume():
                     os.remove(file_path)
             except Exception as e:
                 logger.warning(
-                    f"[{request.request_id}] LinkedIn export parsing failed: {e}"
+                    f"[{rid}] LinkedIn export parsing failed: {e}"
                 )
 
         # Step 2: Analyze job description
         try:
-            logger.debug(f"[{request.request_id}] Analyzing job description")
+            logger.debug(f"[{rid}] Analyzing job description")
             job_requirements = job_analyzer.analyze(job_description)
-            logger.debug(f"[{request.request_id}] Job analysis completed")
+            logger.debug(f"[{rid}] Job analysis completed")
         except Exception as e:
-            logger.error(f"[{request.request_id}] Job analysis failed: {e}")
+            logger.error(f"[{rid}] Job analysis failed: {e}")
             raise ResumeGenerationError("Failed to analyze job description")
 
         # Step 3: Refine GitHub projects based on job requirements
         if "github" in profile_data and "repositories" in profile_data["github"]:
             try:
                 logger.debug(
-                    f"[{request.request_id}] Refining GitHub projects by relevance"
+                    f"[{rid}] Refining GitHub projects by relevance"
                 )
                 job_skills = job_requirements.get("skills", {})
                 relevant_projects = github_scraper.select_relevant_projects(
@@ -491,36 +496,36 @@ def generate_resume():
                 )
                 profile_data["github"]["top_projects"] = relevant_projects
                 logger.debug(
-                    f"[{request.request_id}] Refined to {len(relevant_projects)} relevant projects"
+                    f"[{rid}] Refined to {len(relevant_projects)} relevant projects"
                 )
             except Exception as e:
                 logger.warning(
-                    f"[{request.request_id}] GitHub project refinement failed: {e}"
+                    f"[{rid}] GitHub project refinement failed: {e}"
                 )
                 # Continue with default projects if refinement fails
 
         # Step 4: Generate tailored resume content
         try:
-            logger.debug(f"[{request.request_id}] Generating resume content")
+            logger.debug(f"[{rid}] Generating resume content")
             resume_content = resume_generator.generate(profile_data, job_requirements, user_id=user_id)
-            logger.debug(f"[{request.request_id}] Resume content generated")
+            logger.debug(f"[{rid}] Resume content generated")
         except Exception as e:
             logger.error(
-                f"[{request.request_id}] Resume generation failed: {e}", exc_info=True
+                f"[{rid}] Resume generation failed: {e}", exc_info=True
             )
             raise ResumeGenerationError(f"Failed to generate resume: {str(e)}")
 
         # Step 4: Compile to PDF
         try:
-            logger.debug(f"[{request.request_id}] Compiling LaTeX to PDF")
+            logger.debug(f"[{rid}] Compiling LaTeX to PDF")
             pdf_path = latex_compiler.compile(resume_content)
-            logger.debug(f"[{request.request_id}] LaTeX compilation completed")
+            logger.debug(f"[{rid}] LaTeX compilation completed")
         except LaTeXCompilationError as e:
-            logger.error(f"[{request.request_id}] LaTeX compilation failed: {e}")
+            logger.error(f"[{rid}] LaTeX compilation failed: {e}")
             raise
         except Exception as e:
             logger.error(
-                f"[{request.request_id}] PDF compilation failed: {e}", exc_info=True
+                f"[{rid}] PDF compilation failed: {e}", exc_info=True
             )
             raise LaTeXCompilationError("Failed to compile resume to PDF")
 
@@ -528,36 +533,59 @@ def generate_resume():
         abs_temp_dir = os.path.abspath(config.TEMP_DIR)
         abs_pdf_path = os.path.abspath(pdf_path)
         if not abs_pdf_path.startswith(abs_temp_dir):
-            logger.error(f"[{request.request_id}] Invalid file path: {abs_pdf_path}")
+            logger.error(f"[{rid}] Invalid file path: {abs_pdf_path}")
             raise ValueError("Invalid file path")
 
         # Verify file exists
         if not os.path.exists(abs_pdf_path):
-            logger.error(f"[{request.request_id}] PDF file not found: {abs_pdf_path}")
+            logger.error(f"[{rid}] PDF file not found: {abs_pdf_path}")
             raise ValueError("Generated PDF file not found")
 
-        # Step 6: Create job application record if user is logged in
+        # Step 6: Create resume and job application records if user is logged in
         if user_id:
             try:
-                from database.repositories import JobApplicationRepository
+                from database.repositories import ResumeRepository, JobApplicationRepository
+                
+                # Move PDF to a more permanent 'uploads/resumes' folder
+                resumes_dir = os.path.join("uploads", "resumes")
+                os.makedirs(resumes_dir, exist_ok=True)
+                
+                permanent_pdf_name = f"resume_{user_id}_{uuid.uuid4().hex[:8]}.pdf"
+                permanent_pdf_path = os.path.join(resumes_dir, permanent_pdf_name)
+                
+                import shutil
+                shutil.copy2(abs_pdf_path, permanent_pdf_path)
+
+                # Create Resume record
+                resume_doc = ResumeRepository.create_resume(
+                    user_id=user_id,
+                    github_username=github_username,
+                    job_title=resume_content.get("basics", {}).get("label", "Software Engineer"),
+                    job_description=job_description,
+                    tailored_content=resume_content,
+                    pdf_path=permanent_pdf_path
+                )
+
                 company = resume_content.get("basics", {}).get("company", "Target Company")
                 job_title = resume_content.get("basics", {}).get("label", "Software Engineer")
                 
-                job_url = request.form.get("job_url") if linkedin_file else data.get("job_url")
+                # Safe access to job_url based on content type
+                is_multipart = "multipart/form-data" in content_type
+                job_url = request.form.get("job_url") if is_multipart else (locals().get('data', {}).get("job_url"))
 
                 JobApplicationRepository.create_application(
                     user_id=user_id,
                     job_title=job_title,
                     company=company,
-                    resume_id=str(getattr(resume_content, 'id', '')), # Or however we get it
+                    resume_id=str(resume_doc.id),
                     job_url=job_url,
                     job_description=job_description
                 )
-                logger.debug(f"[{request.request_id}] Job application record created")
+                logger.debug(f"[{rid}] Resume and application records created")
             except Exception as e:
-                logger.error(f"[{request.request_id}] Failed to create job application record: {e}")
+                logger.error(f"[{rid}] Failed to create records: {e}", exc_info=True)
 
-        logger.info(f"[{request.request_id}] Resume generated successfully")
+        logger.info(f"[{rid}] Resume generated successfully")
 
         # Return the PDF file
         return send_file(
@@ -571,7 +599,7 @@ def generate_resume():
         # Re-raise application exceptions
         raise
     except Exception as e:
-        logger.error(f"[{request.request_id}] Unexpected error: {e}", exc_info=True)
+        logger.error(f"[{rid}] Unexpected error: {e}", exc_info=True)
         return (
             jsonify(
                 {
@@ -589,8 +617,9 @@ def interview_prep():
     """
     Endpoint to generate interview preparation tips and questions
     """
+    rid = getattr(request, "request_id", "unknown")
     try:
-        logger.info(f"[{request.request_id}] Interview prep request")
+        logger.info(f"[{rid}] Interview prep request")
         data = request.json
         if not data:
             raise ValidationError("Request body is required")
@@ -611,7 +640,7 @@ def interview_prep():
     except ValidationError as e:
         return jsonify({"error": "VALIDATION_ERROR", "message": str(e)}), 400
     except Exception as e:
-        logger.error(f"Interview prep generation failed: {e}", exc_info=True)
+        logger.error(f"[{rid}] Interview prep generation failed: {e}", exc_info=True)
         return (
             jsonify(
                 {
@@ -703,6 +732,7 @@ def get_user_resumes(user_id):
         return jsonify([{
             "id": str(r.id),
             "job_title": r.job_title,
+            "job_description": r.job_description or "",
             "github_username": r.github_username,
             "created_at": r.created_at.isoformat(),
             "is_archived": r.is_archived
@@ -723,7 +753,8 @@ def get_user_applications(user_id):
             "job_title": a.job_title,
             "company": a.company,
             "status": a.status,
-            "applied_date": a.applied_date.isoformat()
+            "applied_date": a.applied_date.isoformat(),
+            "job_description": a.job_description or ""
         } for a in applications])
     except Exception as e:
         logger.error(f"Failed to fetch user applications: {e}", exc_info=True)

@@ -31,6 +31,7 @@ CORS(app)
 
 # Setup logging
 logger = setup_logging(__name__)
+api_logger = setup_logging("api")
 
 # Initialize database
 init_db()
@@ -42,6 +43,48 @@ job_analyzer = JobAnalyzer()
 interview_generator = InterviewGenerator()
 resume_generator = ResumeGenerator()
 latex_compiler = LaTeXCompiler()
+
+
+# Middleware for request tracking
+@app.before_request
+def before_request():
+    """Track request metadata"""
+    # Use str(uuid.uuid4())[:8] as a simple request ID
+    try:
+        request.request_id = str(uuid.uuid4())[:8]
+    except Exception:
+        pass
+
+
+@app.after_request
+def after_request(response):
+    """Log response details"""
+    rid = "unknown"
+    try:
+        rid = getattr(request, "request_id", "unknown")
+    except Exception:
+        pass
+        
+    api_logger.info(f"[{rid}] {request.method} {request.path} {response.status_code}")
+    return response
+
+
+# Error handlers
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle all unhandled exceptions"""
+    rid = "unknown"
+    try:
+        rid = getattr(request, "request_id", "unknown")
+    except Exception:
+        pass
+        
+    logger.error(f"[{rid}] Unhandled exception: {str(e)}", exc_info=True)
+    return jsonify({
+        "error": "Internal Server Error",
+        "message": str(e)
+    }), 500
+
 
 # Simple HTML interface
 HTML_TEMPLATE = """
@@ -271,10 +314,13 @@ def generate_resume():
     - JSON: {"github_username": "...", "job_description": "..."}
     - OR Multipart: form fields github_username, job_description AND optional file linkedin_data
     """
+    rid = getattr(request, "request_id", "unknown")
     try:
         linkedin_file = None
         user_id = None
-        if request.content_type and "multipart/form-data" in request.content_type:
+        content_type = request.content_type or ""
+        
+        if "multipart/form-data" in content_type:
             github_username = request.form.get("github_username", "").strip()
             job_description = request.form.get("job_description", "").strip()
             linkedin_file = request.files.get("linkedin_data")
@@ -284,6 +330,8 @@ def generate_resume():
             github_username = data.get("github_username", "").strip()
             job_description = data.get("job_description", "").strip()
             user_id = data.get("user_id")
+
+        logger.info(f"[{rid}] Resume generation request for user: {user_id}")
 
         if not job_description:
             return jsonify({"error": "Job description is required"}), 400
@@ -298,11 +346,13 @@ def generate_resume():
         profile_data = {}
 
         if github_username:
+            logger.debug(f"[{rid}] Scraping GitHub: {github_username}")
             github_data = github_scraper.scrape_profile(github_username)
             profile_data["github"] = github_data
 
         # LinkedIn Data Handling (File Export or URL)
         if linkedin_file and linkedin_file.filename:
+            logger.debug(f"[{rid}] Processing LinkedIn file")
             # Save file temporarily
             upload_dir = "uploads"
             os.makedirs(upload_dir, exist_ok=True)
@@ -318,6 +368,7 @@ def generate_resume():
                 os.remove(file_path)
 
         # Step 2: Analyze job description
+        logger.debug(f"[{rid}] Analyzing job description")
         job_requirements = job_analyzer.analyze(job_description)
 
         # Step 3: Refine GitHub projects based on job requirements
@@ -329,9 +380,11 @@ def generate_resume():
             profile_data["github"]["top_projects"] = relevant_projects
 
         # Step 4: Generate tailored resume content
+        logger.debug(f"[{rid}] Generating tailored content")
         resume_content = resume_generator.generate(profile_data, job_requirements, user_id=user_id)
 
         # Step 5: Compile to PDF
+        logger.debug(f"[{rid}] Compiling LaTeX to PDF")
         pdf_path = latex_compiler.compile(resume_content)
 
         # Step 6: Move PDF to permanent storage and save to database if user is logged in
@@ -359,7 +412,8 @@ def generate_resume():
 
                 # Create Job Application record
                 company = resume_content.get("basics", {}).get("company", "Target Company")
-                job_url = request.form.get("job_url") if (request.content_type and "multipart/form-data" in request.content_type) else (data.get("job_url") if data else None)
+                is_multipart = "multipart/form-data" in content_type
+                job_url = request.form.get("job_url") if is_multipart else (data.get("job_url") if 'data' in locals() else None)
                 
                 JobApplicationRepository.create_application(
                     user_id=user_id,
@@ -369,9 +423,9 @@ def generate_resume():
                     job_url=job_url,
                     job_description=job_description
                 )
-                logger.info(f"Stored resume and application for user {user_id}")
+                logger.info(f"[{rid}] Stored resume and application for user {user_id}")
             except Exception as e:
-                logger.error(f"Failed to store resume/application: {e}")
+                logger.error(f"[{rid}] Failed to store resume/application: {e}")
 
         # Validate that the PDF path is within the temp directory (security check)
         abs_temp_dir = os.path.abspath("temp")
@@ -380,6 +434,7 @@ def generate_resume():
             return jsonify({"error": "Invalid file path"}), 500
 
         # Return the PDF file
+        logger.info(f"[{rid}] Resume generation successful")
         return send_file(
             pdf_path,
             mimetype="application/pdf",
@@ -387,6 +442,7 @@ def generate_resume():
         )
 
     except Exception as e:
+        logger.error(f"[{rid}] Generation failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -396,12 +452,15 @@ def interview_prep():
     """
     Endpoint to generate interview preparation tips and questions
     """
+    rid = getattr(request, "request_id", "unknown")
     try:
         data = request.get_json(silent=True) or {}
         job_description = data.get("job_description", "").strip()
 
         if not job_description:
             return jsonify({"error": "Job description is required"}), 400
+
+        logger.info(f"[{rid}] Interview prep request")
 
         # Analyze job description
         job_requirements = job_analyzer.analyze(job_description)
@@ -412,6 +471,7 @@ def interview_prep():
         return jsonify(prep_data)
 
     except Exception as e:
+        logger.error(f"[{rid}] Interview prep failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -488,6 +548,7 @@ def get_user_resumes(user_id):
         return jsonify([{
             "id": str(r.id),
             "job_title": r.job_title,
+            "job_description": r.job_description or "",
             "github_username": r.github_username,
             "created_at": r.created_at.isoformat(),
             "is_archived": r.is_archived
@@ -548,7 +609,8 @@ def get_user_applications(user_id):
             "job_title": a.job_title,
             "company": a.company,
             "status": a.status,
-            "applied_date": a.applied_date.isoformat()
+            "applied_date": a.applied_date.isoformat(),
+            "job_description": a.job_description or ""
         } for a in applications])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
