@@ -37,9 +37,9 @@ function Home() {
           </motion.div>
           
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-foreground mb-6 leading-[0.9]">
-            Optimize<span className="text-primary">.</span><br />
-            Apply<span className="text-primary">.</span><br />
-            Succeed<span className="text-primary">.</span>
+            Optimize<span className="text-accent-dot">.</span><br />
+            Apply<span className="text-accent-dot">.</span><br />
+            Succeed<span className="text-accent-dot">.</span>
           </h1>
           
           <p className="max-w-2xl mx-auto text-xl text-muted-foreground font-medium mb-10 leading-relaxed">

@@ -22,12 +22,12 @@ export default function Navbar() {
             <Link to="/" className="flex items-center gap-2 group">
               <motion.div 
                 whileHover={{ rotate: 12, scale: 1.1 }}
-                className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20"
+                className="bg-black p-2 rounded-xl shadow-lg shadow-black/20"
               >
                 <Briefcase className="w-5 h-5 text-white" />
               </motion.div>
               <span className="text-2xl font-black tracking-tight text-foreground">
-                LLMployable<span className="text-primary">.</span>
+                LLMployable<span className="text-accent-dot">.</span>
               </span>
             </Link>
           </div>
@@ -61,7 +61,7 @@ export default function Navbar() {
                       <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Verified</span>
                       <span className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{user?.username}</span>
                     </div>
-                    <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 ring-2 ring-white/10">
+                    <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-black/20 ring-2 ring-white/10">
                         {user?.username?.[0]?.toUpperCase()}
                     </div>
                   </div>
@@ -83,7 +83,7 @@ export default function Navbar() {
                   </Link>
                   <Link 
                     to="/register" 
-                    className="bg-foreground hover:bg-primary text-white px-7 py-3 rounded-2xl text-sm font-black shadow-xl shadow-primary/10 transition-smooth hover:-translate-y-1"
+                    className="bg-foreground hover:bg-primary text-background px-7 py-3 rounded-2xl text-sm font-black shadow-xl shadow-primary/10 transition-smooth hover:-translate-y-1"
                   >
                     Get Started Free
                   </Link>
@@ -117,7 +117,7 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <>
                   <div className="flex items-center gap-4 px-4 py-6 bg-muted/50 rounded-[2rem] mb-6 shadow-inner ring-1 ring-white/5">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-primary/20">
+                    <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-black/20">
                       {user?.username?.[0]?.toUpperCase()}
                     </div>
                     <div>
