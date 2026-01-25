@@ -49,3 +49,10 @@ tmp/
 
 # Node modules (if using frontend)
 node_modules/
+
+# Application specific
+logs/
+uploads/
+LinkedIn_Data_Export/
+demo.py
+test_app.py
