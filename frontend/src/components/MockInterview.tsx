@@ -125,47 +125,61 @@ export default function MockInterview() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Interview Controls */}
-        <div className="bg-card rounded-[3rem] p-10 border border-muted shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5">
-            <Mic className="w-32 h-32" />
+        <div className="bg-card rounded-[3rem] p-10 border border-white/10 shadow-2xl relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Mic className="w-40 h-40 -mr-10 -mt-10 rotate-12" />
           </div>
 
-          <div className="flex flex-col items-center justify-center space-y-8 relative z-10">
-            <div className={`w-32 h-32 rounded-full flex items-center justify-center transition-all duration-500 ${
-              status === 'connected' ? 'bg-primary shadow-2xl shadow-primary/50 scale-110 animate-pulse' : 'bg-muted'
+          <div className="flex flex-col items-center justify-center space-y-10 relative z-10">
+            <motion.div 
+               animate={status === 'connected' ? { scale: [1, 1.05, 1] } : {}}
+               transition={{ duration: 2, repeat: Infinity }}
+               className={`w-40 h-40 rounded-[2.5rem] flex items-center justify-center transition-all duration-700 shadow-inner ${
+              status === 'connected' 
+              ? 'bg-primary shadow-2xl shadow-primary/30 rotate-3' 
+              : 'bg-muted/50 -rotate-3 hover:rotate-0'
             }`}>
-              {status === 'connected' ? (
-                <Mic className="w-12 h-12 text-white" />
-              ) : (
-                <MicOff className="w-12 h-12 text-muted-foreground" />
-              )}
-            </div>
+              <div className={`w-36 h-36 rounded-[2.2rem] border-4 border-white/5 flex items-center justify-center ${
+                status === 'connected' ? 'bg-primary' : 'bg-muted'
+              }`}>
+                {status === 'connected' ? (
+                  <Mic className="w-16 h-16 text-white animate-pulse" />
+                ) : (
+                  <MicOff className="w-16 h-16 text-muted-foreground" />
+                )}
+              </div>
+            </motion.div>
 
             <div className="text-center">
-              <p className="font-black uppercase tracking-widest text-xs opacity-50 mb-2">Connection Status</p>
-              <p className={`text-xl font-bold ${status === 'connected' ? 'text-primary' : 'text-muted-foreground'}`}>
-                {status === 'connected' ? 'Live Interviewing...' : status === 'connecting' ? 'Establishing Line...' : 'Ready to Start'}
+              <span className="inline-block px-3 py-1 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-3 ring-1 ring-primary/20">
+                AI Voice Interface
+              </span>
+              <p className={`text-2xl font-black tracking-tight ${status === 'connected' ? 'text-primary' : 'text-foreground'}`}>
+                {status === 'connected' ? 'Session Active' : status === 'connecting' ? 'Handshaking...' : 'Standby'}
               </p>
             </div>
 
-            {status !== 'connected' ? (
-              <button 
-                onClick={startInterview}
-                disabled={status === 'connecting'}
-                className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-              >
-                <Mic className="w-5 h-5" />
-                {status === 'connecting' ? 'Connecting...' : 'Start Voice Interview'}
-              </button>
-            ) : (
-              <button 
-                onClick={stopInterview}
-                className="w-full bg-danger text-white py-4 rounded-2xl font-black text-lg hover:shadow-lg hover:shadow-danger/30 transition-all flex items-center justify-center gap-3"
-              >
-                <PhoneOff className="w-5 h-5" />
-                End Interview Session
-              </button>
-            )}
+            <div className="w-full pt-4">
+              {status !== 'connected' ? (
+                <button 
+                  onClick={startInterview}
+                  disabled={status === 'connecting'}
+                  className="w-full bg-foreground hover:bg-primary text-white py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-primary/10 transition-smooth flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95"
+                >
+                  <Mic className="w-5 h-5" />
+                  {status === 'connecting' ? 'Establishing Link...' : 'Initialize Voice Agent'}
+                </button>
+              ) : (
+                <button 
+                  onClick={stopInterview}
+                  className="w-full bg-danger text-white py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-danger/20 hover:bg-danger-dark transition-smooth flex items-center justify-center gap-3 active:scale-95"
+                >
+                  <PhoneOff className="w-5 h-5" />
+                  Terminate Session
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
