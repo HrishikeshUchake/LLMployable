@@ -1,6 +1,6 @@
 # Quick Start - Production Setup
 
-This guide will get you up and running with the production-ready Mployable application in 5-10 minutes.
+This guide will get you up and running with the production-ready LLMployable application in 5-10 minutes.
 
 ## Option 1: Local Development (Fastest)
 
@@ -54,7 +54,7 @@ docker-compose up -d
 curl http://localhost/health
 
 # View logs
-docker-compose logs -f mployable
+docker-compose logs -f llmployable
 
 # Open browser
 open http://localhost
@@ -142,7 +142,7 @@ tail -f logs/api.log
 tail -f logs/error.log
 
 # Docker logs
-docker-compose logs -f mployable
+docker-compose logs -f llmployable
 ```
 
 ### Stop Services

@@ -1,6 +1,6 @@
-# 🚀 Mployable - AI-Powered Resume Builder
+# 🚀 LLMployable - AI-Powered Resume Builder
 
-**Mployable** is a sophisticated full-stack platform designed to automate the creation of hyper-tailored resumes. By leveraging LLM-based analysis and semantic matching, Mployable bridges the gap between your technical profile (GitHub/LinkedIn) and specific job requirements.
+**LLMployable** is a sophisticated full-stack platform designed to automate the creation of hyper-tailored resumes. By leveraging LLM-based analysis and semantic matching, LLMployable bridges the gap between your technical profile (GitHub/LinkedIn) and specific job requirements.
 
 ## ✨ Features
 
@@ -36,8 +36,8 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/HrishikeshUchake/Mployable.git
-cd Mployable
+git clone https://github.com/HrishikeshUchake/LLMployable.git
+cd LLMployable
 ```
 
 ### 2. Install Dependencies
@@ -115,7 +115,7 @@ The application will start at `http://localhost:5000`
 ## 🏗️ Project Structure
 
 ```
-Mployable/
+LLMployable/
 ├── app.py                      # Main Flask application
 ├── requirements.txt            # Python dependencies
 ├── .env.example               # Environment variables template

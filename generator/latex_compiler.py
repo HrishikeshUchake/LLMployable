@@ -136,15 +136,11 @@ class LaTeXCompiler:
         num_exp = len(experience)
         num_proj = len(projects)
 
-        # We want to show as many experiences as possible, up to a limit
-        display_exp_count = min(num_exp, 4) 
-        # The rest of the budget goes to projects
-        display_proj_count = max(1, min(num_proj, max_total_items - display_exp_count))
+        # We want to show as many experiences as possible, up to a limit of 3
+        display_exp_count = min(num_exp, 3)
+        # The rest goes to projects, also capped at 3
+        display_proj_count = min(num_proj, 3)
         
-        # If we have very few experiences, we can show more projects
-        if display_exp_count + display_proj_count < max_total_items:
-            display_proj_count = min(num_proj, max_total_items - display_exp_count)
-
         # Adjust bullets based on number of items
         total_displayed = display_exp_count + display_proj_count
         if total_displayed <= 4:
@@ -384,12 +380,12 @@ Education:
             text += f"    {edu.get('details', '')}\n\n"
 
         text += "Professional Experience:\n"
-        for exp in experience[:5]:
+        for exp in experience[:3]:
             text += f"  {exp.get('role', '')} @ {exp.get('company', '')} | {exp.get('date', '')}\n"
             text += f"    {exp.get('description', '')}\n\n"
 
         text += "\nNotable Projects:\n"
-        for proj in projects[:5]:
+        for proj in projects[:3]:
             text += f"  {proj.get('name', 'Project')}\n"
             text += f"    {proj.get('description', '')}\n"
             text += (

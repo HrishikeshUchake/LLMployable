@@ -1,7 +1,7 @@
-# Mployable - Production Readiness Roadmap
+# LLMployable - Production Readiness Roadmap
 
 ## Overview
-This document outlines the strategic improvements needed to take Mployable from demo/hackathon stage to production-ready application.
+This document outlines the strategic improvements needed to take LLMployable from demo/hackathon stage to production-ready application.
 
 ## Phase 1: Core Stability & Reliability (High Priority)
 

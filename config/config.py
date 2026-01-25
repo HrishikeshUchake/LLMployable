@@ -1,5 +1,5 @@
 """
-Configuration management for Mployable
+Configuration management for LLMployable
 
 Supports environment-specific configs with validation and sensible defaults.
 """
@@ -24,7 +24,7 @@ class Config:
     """Base configuration class"""
 
     # Application
-    APP_NAME = "Mployable"
+    APP_NAME = "LLMployable"
     VERSION = "1.0.0"
 
     # Environment
@@ -68,7 +68,7 @@ class Config:
 
     # GitHub Scraper
     GITHUB_MAX_REPOS = 20
-    GITHUB_MAX_TOP_PROJECTS = 5
+    GITHUB_MAX_TOP_PROJECTS = 3
 
     # Gemini
     GEMINI_MODEL = "gemini-2.0-flash-lite"
@@ -80,8 +80,8 @@ class Config:
     RESUME_TIMEOUT = 300  # 5 minutes
 
     # Database (MongoDB)
-    DATABASE_URL = "mongodb://localhost:27017/mployable"
-    DATABASE_NAME = "mployable"
+    DATABASE_URL = "mongodb://localhost:27017/llmployable"
+    DATABASE_NAME = "llmployable"
     DATABASE_HOST = "localhost"
     DATABASE_PORT = 27017
     DATABASE_USERNAME = None

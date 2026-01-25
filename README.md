@@ -1,6 +1,6 @@
-# 🚀 Mployable - AI-Powered Resume Builder
+# 🚀 LLMployable - AI-Powered Resume Builder
 
-**Mployable** is a sophisticated full-stack platform designed to automate the creation of hyper-tailored resumes. By leveraging LLM-based analysis and semantic matching, Mployable bridges the gap between your technical profile (GitHub/LinkedIn) and specific job requirements.
+**LLMployable** is a sophisticated full-stack platform designed to automate the creation of hyper-tailored resumes. By leveraging LLM-based analysis and semantic matching, LLMployable bridges the gap between your technical profile (GitHub/LinkedIn) and specific job requirements.
 
 ## ✨ Latest Features
 
@@ -46,8 +46,8 @@
 ### 1. Clone & Setup Environments
 
 ```bash
-git clone https://github.com/HrishikeshUchake/Mployable.git
-cd Mployable
+git clone https://github.com/HrishikeshUchake/LLMployable.git
+cd LLMployable
 cp .env.example .env
 ```
 
@@ -89,10 +89,10 @@ docker-compose up --build
 
 ## 📖 How it Works
 
-1. **Profile Connection**: Enter your GitHub username. Mployable fetches your repos, languages, and contributions.
+1. **Profile Connection**: Enter your GitHub username. LLMployable fetches your repos, languages, and contributions.
 2. **Contextual Input**: Provide your LinkedIn Data Export for professional experience.
 3. **Job Analysis**: Paste a job description. The AI extracts key requirements, tech stack, and experience levels.
-4. **Smart Selection**: Mployable's semantic matcher identifies which of your GitHub projects most closely match the job's tech stack.
+4. **Smart Selection**: LLMployable's semantic matcher identifies which of your GitHub projects most closely match the job's tech stack.
 5. **PDF Generation**: A customized LaTeX template is filled with the matched data and compiled into a downloadable PDF.
 
 ---

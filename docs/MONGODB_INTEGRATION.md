@@ -1,4 +1,4 @@
-# Mployable MongoDB Integration Summary
+# LLMployable MongoDB Integration Summary
 
 ## What's Been Implemented
 
@@ -187,8 +187,8 @@ if cached:
 
 ```env
 # MongoDB Connection
-DATABASE_URL=mongodb://localhost:27017/mployable
-DATABASE_NAME=mployable
+DATABASE_URL=mongodb://localhost:27017/llmployable
+DATABASE_NAME=llmployable
 DATABASE_HOST=localhost
 DATABASE_PORT=27017
 DATABASE_USERNAME=          # Leave empty for local dev
@@ -215,7 +215,7 @@ docker-compose logs -f mongodb
 ### MongoDB Shell Access
 ```bash
 docker-compose exec mongodb mongosh
-use mployable
+use llmployable
 show collections
 ```
 
@@ -346,7 +346,7 @@ docker-compose ps
 docker-compose logs mongodb
 
 # Test connection
-mongosh "mongodb://localhost:27017/mployable"
+mongosh "mongodb://localhost:27017/llmployable"
 ```
 
 ### Query Issues

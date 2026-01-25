@@ -26,7 +26,7 @@ export default function Navbar() {
                 <Rocket className="w-5 h-5 text-white" />
               </motion.div>
               <span className="text-2xl font-black tracking-tight text-foreground">
-                Mployable<span className="text-primary">.</span>
+                LLMployable<span className="text-primary">.</span>
               </span>
             </Link>
           </div>

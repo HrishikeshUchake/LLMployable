@@ -1,5 +1,5 @@
 """
-Input validation utilities for Mployable
+Input validation utilities for LLMployable
 
 Provides validation functions for all user inputs before processing.
 """

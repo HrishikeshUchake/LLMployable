@@ -1,5 +1,5 @@
 """
-Mployable - Resume Builder Application
+LLMployable - Resume Builder Application
 
 This application scrapes LinkedIn and GitHub profiles, analyzes job descriptions,
 and generates tailored resumes as PDFs using LaTeX.
@@ -91,7 +91,7 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mployable - AI Resume Builder</title>
+    <title>LLMployable - AI Resume Builder</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -186,7 +186,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Mployable</h1>
+        <h1>🚀 LLMployable</h1>
         <p class="subtitle">AI-Powered Resume Builder for Hackathons & Job Applications</p>
         
         <form id="resumeForm">

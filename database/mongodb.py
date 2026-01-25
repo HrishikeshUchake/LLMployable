@@ -1,5 +1,5 @@
 """
-MongoDB database integration for Mployable
+MongoDB database integration for LLMployable
 
 Provides connection management, models, and utilities for MongoDB operations.
 """

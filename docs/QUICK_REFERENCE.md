@@ -7,7 +7,7 @@
 ```bash
 # Clone repository
 git clone <repo-url>
-cd Mployable
+cd LLMployable
 
 # Copy environment template
 cp .env.example .env
@@ -43,7 +43,7 @@ curl http://localhost:5000/api/v1/health
 ```bash
 # MongoDB shell
 docker-compose exec mongodb mongosh
-use mployable
+use llmployable
 show collections
 
 # View user data
@@ -56,7 +56,7 @@ db.resumes.find()
 db.resumes.countDocuments()
 
 # Create backup
-docker exec mployable-mongodb mongodump --out /backup
+docker exec llmployable-mongodb mongodump --out /backup
 ```
 
 ### Testing
@@ -101,7 +101,7 @@ black . && flake8 . && mypy . --ignore-missing-imports
 
 ```bash
 # View application logs
-docker-compose logs -f mployable
+docker-compose logs -f llmployable
 
 # View MongoDB logs
 docker-compose logs -f mongodb
@@ -124,24 +124,24 @@ ENVIRONMENT=development DEBUG=true python app_production.py
 
 # Connect to MongoDB directly
 docker-compose exec mongodb mongosh
-> use mployable
+> use llmployable
 > db.resumes.find({_id: ObjectId("...")})
 
 # Check container status
 docker-compose ps
 
 # View container logs with timestamps
-docker-compose logs --timestamps --tail=100 mployable
+docker-compose logs --timestamps --tail=100 llmployable
 
 # SSH into container
-docker-compose exec mployable /bin/bash
+docker-compose exec llmployable /bin/bash
 ```
 
 ### Docker Management
 
 ```bash
 # Build image
-docker build -t mployable:latest .
+docker build -t llmployable:latest .
 
 # Start all services
 docker-compose up -d
@@ -200,10 +200,10 @@ git stash
 
 ```bash
 # Build and tag image
-docker build -t registry.example.com/mployable:latest .
+docker build -t registry.example.com/llmployable:latest .
 
 # Push to registry
-docker push registry.example.com/mployable:latest
+docker push registry.example.com/llmployable:latest
 
 # Deploy with docker-compose (staging)
 docker-compose -f docker-compose.staging.yml up -d
@@ -262,11 +262,11 @@ git push origin feature/new-feature
 
 ```bash
 # 1. Check logs
-docker-compose logs -f mployable | grep ERROR
+docker-compose logs -f llmployable | grep ERROR
 
 # 2. Check database
 docker-compose exec mongodb mongosh
-use mployable
+use llmployable
 db.audit_logs.find({status: "failure"}).limit(5)
 
 # 3. Enable debug mode and test
@@ -285,7 +285,7 @@ git commit -m "Fix: Resolved issue with..."
 ```bash
 # 1. Connect to MongoDB
 docker-compose exec mongodb mongosh
-use mployable
+use llmployable
 
 # 2. Check data
 db.resumes.find().limit(1)
@@ -329,8 +329,8 @@ DEBUG=false
 LOG_LEVEL=INFO
 
 # Database
-DATABASE_URL=mongodb://localhost:27017/mployable
-DATABASE_NAME=mployable
+DATABASE_URL=mongodb://localhost:27017/llmployable
+DATABASE_NAME=llmployable
 
 # Server
 HOST=0.0.0.0
@@ -431,7 +431,7 @@ cat .env  # Should not contain real secrets
 bandit -r . -f json | grep "HIGH\|CRITICAL"
 
 # Review Docker image
-docker inspect mployable:latest
+docker inspect llmployable:latest
 ```
 
 ## Learning Resources
@@ -447,10 +447,10 @@ docker inspect mployable:latest
 ### Database Recovery
 ```bash
 # Backup current data
-docker exec mployable-mongodb mongodump --out /backup-$(date +%Y%m%d)
+docker exec llmployable-mongodb mongodump --out /backup-$(date +%Y%m%d)
 
 # Restore from backup
-docker exec mployable-mongodb mongorestore /backup-20240124
+docker exec llmployable-mongodb mongorestore /backup-20240124
 ```
 
 ### Service Restart
@@ -459,7 +459,7 @@ docker exec mployable-mongodb mongorestore /backup-20240124
 docker-compose restart
 
 # Restart specific service
-docker-compose restart mployable
+docker-compose restart llmployable
 
 # Hard restart (stop and start)
 docker-compose down
@@ -469,7 +469,7 @@ docker-compose up -d
 ### Rollback Deployment
 ```bash
 # Use previous image tag
-docker tag mployable:previous mployable:latest
+docker tag llmployable:previous llmployable:latest
 
 # Restart with previous version
 docker-compose down

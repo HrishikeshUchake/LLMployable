@@ -1,4 +1,4 @@
-"""Utilities package for Mployable"""
+"""Utilities package for LLMployable"""
 
 from .validators import InputValidator
 

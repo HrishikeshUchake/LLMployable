@@ -1,6 +1,6 @@
 # Architecture & Design Reference
 
-This document provides technical reference for the production implementation of Mployable.
+This document provides technical reference for the production implementation of LLMployable.
 
 ## System Architecture
 
@@ -41,7 +41,7 @@ This document provides technical reference for the production implementation of 
 │  └─────────────────────────────────────────────────────────┘ │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │ Error Handlers                                          │ │
-│  │  ├─ MployableException → JSON response                 │ │
+│  │  ├─ LLMployableException → JSON response                 │ │
 │  │  ├─ 400 Bad Request                                    │ │
 │  │  ├─ 404 Not Found                                      │ │
 │  │  └─ 500 Internal Error                                 │ │
@@ -156,7 +156,7 @@ This document provides technical reference for the production implementation of 
 
 ```
 Exception
-└── MployableException
+└── LLMployableException
     │   (base class with error_code, status_code)
     │
     ├── ValidationError (400)
@@ -274,7 +274,7 @@ TestPerformance
 ### Docker Stack (docker-compose.yml)
 ```
 ┌──────────────┐
-│ mployable    │ (Flask + Gunicorn, 4 workers)
+│ llmployable    │ (Flask + Gunicorn, 4 workers)
 │ app:5000     │
 └──────┬───────┘
        │ depends_on
@@ -286,7 +286,7 @@ TestPerformance
 │ (Cache)     │   │ (Database)   │  │ (Proxy)    │
 └─────────────┘   └──────────────┘  └────────────┘
 
-Docker Network: mployable-network (bridge)
+Docker Network: llmployable-network (bridge)
 Volumes: redis-data, postgres-data
 ```
 
@@ -295,12 +295,12 @@ Volumes: redis-data, postgres-data
 ┌─────────────────────────────────────┐
 │ Kubernetes Cluster                  │
 ├─────────────────────────────────────┤
-│ Deployment: mployable (3 replicas)  │
+│ Deployment: llmployable (3 replicas)  │
 │ ├─ Pod 1: Flask app                 │
 │ ├─ Pod 2: Flask app                 │
 │ └─ Pod 3: Flask app                 │
 │                                     │
-│ Service: mployable-service          │
+│ Service: llmployable-service          │
 │ ├─ Type: LoadBalancer               │
 │ └─ Port: 80 → 5000                  │
 │                                     │
@@ -446,4 +446,4 @@ Data Security:
 
 ---
 
-This architecture provides a solid foundation for scaling and evolving Mployable as requirements grow.
+This architecture provides a solid foundation for scaling and evolving LLMployable as requirements grow.

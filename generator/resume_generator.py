@@ -96,12 +96,12 @@ class ResumeGenerator:
 
         # Format LinkedIn Experience
         experience_text = ""
-        for exp in linkedin_data.get("experience", []):
+        for exp in linkedin_data.get("experience", [])[:5]: # Limit input to 5 best matches
             experience_text += f"- {exp.get('title')} at {exp.get('company')} ({exp.get('start_date')} - {exp.get('end_date')}): {exp.get('description')}\n"
 
         # Format Education
         education_text = ""
-        for edu in linkedin_data.get("education", []):
+        for edu in linkedin_data.get("education", [])[:2]:
             degree = edu.get("degree") or "Degree"
             field = edu.get("field_of_study") or edu.get("notes")
             school = edu.get("school") or "University"
@@ -113,7 +113,7 @@ class ResumeGenerator:
             education_text += f" from {school} ({dates})\n"
 
         # Format LinkedIn Projects (if available)
-        linkedin_projects = linkedin_data.get("projects", [])
+        linkedin_projects = linkedin_data.get("projects", [])[:3]
         li_projects_text = ""
         for lp in linkedin_projects:
             li_projects_text += f"- {lp.get('title')}: {lp.get('description')} ({lp.get('start_date')} - {lp.get('end_date')})\n"
@@ -185,6 +185,7 @@ Generate a detailed, tailored resume that MUST fit on a single page. Follow thes
 6. Provide exactly 2-3 concise bullet points for each work experience.
 7. Provide exactly 1-2 concise bullet points for each project.
 8. Ensure the layout is dense and professional to avoid empty space while strictly remaining on one page.
+9. Include a maximum of 3 professional work experiences and a maximum of 3 projects.
 
 Return the response in the following JSON format:
 {{
@@ -225,7 +226,7 @@ Only return valid JSON, no additional text."""
             return "No projects available"
 
         formatted = []
-        for proj in projects[:5]:
+        for proj in projects[:3]:
             formatted.append(
                 f"- {proj['name']}: {proj['description']} ({proj['language']}, {proj['stars']} stars)"
             )
@@ -362,8 +363,8 @@ Only return valid JSON, no additional text."""
             "summary": linkedin_data.get("summary")
             or github_data.get("bio", "Experienced software developer"),
             "skills": final_skills,
-            "experience": experience[:6], # Let the compiler handle scaling
-            "projects": projects[:6],    # Let the compiler handle scaling
+            "experience": experience[:3], # Limit to 3 items
+            "projects": projects[:3],    # Limit to 3 items
             "education": education[:2],
             "certifications": certifications[:10]
         }

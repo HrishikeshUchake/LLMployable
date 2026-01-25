@@ -1,9 +1,9 @@
-# Mployable AI Coding Instructions
+# LLMployable AI Coding Instructions
 
-Expert instructions for coding in the Mployable repository.
+Expert instructions for coding in the LLMployable repository.
 
 ## 🏗️ Architecture & Component Flow
-Mployable follows a linear data processing pipeline:
+LLMployable follows a linear data processing pipeline:
 1.  **Scrapers** ([scrapers/](scrapers/)): Fetch raw data from GitHub (API-based) or LinkedIn (placeholder).
 2.  **Analyzer** ([analyzer/](analyzer/)): Uses Google Gemini AI to extract structured requirements from job descriptions.
 3.  **Generator** ([generator/resume_generator.py](generator/resume_generator.py)): Uses Gemini to map profile data to job requirements, producing a structured JSON resume.

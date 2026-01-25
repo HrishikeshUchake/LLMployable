@@ -1,8 +1,8 @@
-# MongoDB Setup & Usage Guide for Mployable
+# MongoDB Setup & Usage Guide for LLMployable
 
 ## Overview
 
-Mployable now uses **MongoDB** as its primary database for:
+LLMployable now uses **MongoDB** as its primary database for:
 - User management and authentication
 - Resume storage and versioning
 - Job application tracking
@@ -27,7 +27,7 @@ docker-compose logs -f mongodb
 docker-compose down
 ```
 
-MongoDB will be available at: `mongodb://localhost:27017/mployable`
+MongoDB will be available at: `mongodb://localhost:27017/llmployable`
 
 #### Option 2: Direct MongoDB Installation
 
@@ -57,8 +57,8 @@ choco install mongodb
 Update your `.env` file:
 
 ```env
-DATABASE_URL=mongodb://localhost:27017/mployable
-DATABASE_NAME=mployable
+DATABASE_URL=mongodb://localhost:27017/llmployable
+DATABASE_NAME=llmployable
 DATABASE_HOST=localhost
 DATABASE_PORT=27017
 DATABASE_USERNAME=          # Leave empty for local dev
@@ -338,20 +338,20 @@ recent = Resume.objects(user_id=user_id).limit(10)
 
 ```bash
 # Using Docker
-docker exec mployable-mongodb mongodump --out /backup
+docker exec llmployable-mongodb mongodump --out /backup
 
 # Direct mongodump
-mongodump --uri="mongodb://localhost:27017/mployable" --out /backup
+mongodump --uri="mongodb://localhost:27017/llmployable" --out /backup
 ```
 
 ### Restore
 
 ```bash
 # Using Docker
-docker exec mployable-mongodb mongorestore /backup
+docker exec llmployable-mongodb mongorestore /backup
 
 # Direct mongorestore
-mongorestore --uri="mongodb://localhost:27017/mployable" /backup
+mongorestore --uri="mongodb://localhost:27017/llmployable" /backup
 ```
 
 ### Automated Backups
@@ -360,9 +360,9 @@ Create a script (e.g., `backup_db.sh`):
 
 ```bash
 #!/bin/bash
-BACKUP_DIR="/backups/mployable-$(date +%Y%m%d-%H%M%S)"
+BACKUP_DIR="/backups/llmployable-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP_DIR"
-mongodump --uri="mongodb://localhost:27017/mployable" --out "$BACKUP_DIR"
+mongodump --uri="mongodb://localhost:27017/llmployable" --out "$BACKUP_DIR"
 
 # Keep only last 30 days of backups
 find /backups -type d -mtime +30 -exec rm -rf {} +
@@ -392,13 +392,13 @@ else:
 
 ```bash
 # Connect to MongoDB
-mongosh "mongodb://localhost:27017/mployable"
+mongosh "mongodb://localhost:27017/llmployable"
 
 # List databases
 show databases
 
 # Switch database
-use mployable
+use llmployable
 
 # List collections
 show collections

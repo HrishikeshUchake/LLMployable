@@ -42,7 +42,7 @@ function Home() {
           </h1>
           
           <p className="max-w-2xl mx-auto text-xl text-muted-foreground font-medium mb-10 leading-relaxed">
-            Mployable uses advanced AI to bridge the gap between your technical profile and your dream job. Tailored resumes that bypass ATS and impress recruiters.
+            LLMployable uses advanced AI to bridge the gap between your technical profile and your dream job. Tailored resumes that bypass ATS and impress recruiters.
           </p>
 
           <div className="flex flex-wrap justify-center gap-12 mt-16 opacity-50">

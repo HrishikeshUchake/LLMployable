@@ -1,4 +1,4 @@
-"""Database package for Mployable"""
+"""Database package for LLMployable"""
 
 from .mongodb import (
     DatabaseManager,

@@ -1,5 +1,5 @@
 """
-Mployable - Production-Ready Resume Builder Application
+LLMployable - Production-Ready Resume Builder Application
 
 This application scrapes LinkedIn and GitHub profiles, analyzes job descriptions,
 and generates tailored resumes as PDFs using LaTeX.
@@ -28,7 +28,7 @@ from config import (
     get_logger,
     api_logger,
     error_logger,
-    MployableException,
+    LLMployableException,
     ValidationError,
     InvalidGitHubUsername,
     InvalidJobDescription,
@@ -76,7 +76,7 @@ CORS(app, resources={"/api/*": cors_config})
 app.config["JSON_SORT_KEYS"] = False
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50 MB max request size
 
-logger.info(f"Mployable starting in {config.ENVIRONMENT} mode")
+logger.info(f"LLMployable starting in {config.ENVIRONMENT} mode")
 
 # Initialize components
 try:
@@ -97,7 +97,7 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mployable - AI Resume Builder</title>
+    <title>LLMployable - AI Resume Builder</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -192,7 +192,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Mployable</h1>
+        <h1>🚀 LLMployable</h1>
         <p class="subtitle">AI-Powered Resume Builder for Hackathons & Job Applications</p>
         
         <form id="resumeForm">
@@ -327,8 +327,8 @@ def after_request(response):
 
 
 # Error handlers
-@app.errorhandler(MployableException)
-def handle_mployable_exception(error):
+@app.errorhandler(LLMployableException)
+def handle_llmployable_exception(error):
     """Handle application-specific exceptions"""
     rid = getattr(request, "request_id", "unknown")
     error_logger.warning(f"[{rid}] {error.error_code}: {error.message}")
@@ -591,7 +591,7 @@ def generate_resume():
             download_name=f'tailored_resume_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf',
         )
 
-    except MployableException:
+    except LLMployableException:
         # Re-raise application exceptions
         raise
     except Exception as e:
@@ -832,7 +832,7 @@ if __name__ == "__main__":
     os.makedirs(config.LOG_DIR, exist_ok=True)
     os.makedirs(config.UPLOAD_DIR, exist_ok=True)
 
-    logger.info(f"Starting Mployable v{config.VERSION}")
+    logger.info(f"Starting LLMployable v{config.VERSION}")
     logger.info(f"Environment: {config.ENVIRONMENT}")
     logger.info(f"Debug mode: {config.DEBUG}")
 

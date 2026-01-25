@@ -1,5 +1,5 @@
 """
-Logging Configuration for Mployable
+Logging Configuration for LLMployable
 
 Provides structured logging with file rotation, multiple handlers,
 and environment-based configuration.
@@ -68,7 +68,7 @@ def setup_logging(
         Configured logger instance
     """
     # Create logger
-    logger = logging.getLogger(name or "mployable")
+    logger = logging.getLogger(name or "llmployable")
 
     # Set log level
     if log_level is None:
@@ -123,6 +123,6 @@ def get_logger(name: str) -> logging.Logger:
 
 
 # Application-wide logger
-app_logger = setup_logging("mployable", log_file="app.log")
-api_logger = setup_logging("mployable.api", log_file="api.log")
-error_logger = setup_logging("mployable.error", log_file="error.log")
+app_logger = setup_logging("llmployable", log_file="app.log")
+api_logger = setup_logging("llmployable.api", log_file="api.log")
+error_logger = setup_logging("llmployable.error", log_file="error.log")

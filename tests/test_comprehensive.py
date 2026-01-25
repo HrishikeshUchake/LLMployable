@@ -1,5 +1,5 @@
 """
-Comprehensive unit tests for Mployable
+Comprehensive unit tests for LLMployable
 
 Tests cover all major components and error cases.
 """
@@ -261,7 +261,7 @@ class TestFlaskApp:
         """Test root endpoint returns HTML"""
         response = client.get("/")
         assert response.status_code == 200
-        assert b"Mployable" in response.data
+        assert b"LLMployable" in response.data
 
     def test_api_health_endpoint(self, client):
         """Test API health endpoint"""

@@ -1,4 +1,4 @@
-"""Configuration package for Mployable"""
+"""Configuration package for LLMployable"""
 
 from .config import (
     Config,
@@ -11,7 +11,7 @@ from .config import (
     Environment,
 )
 from .exceptions import (
-    MployableException,
+    LLMployableException,
     ValidationError,
     InvalidGitHubUsername,
     InvalidJobDescription,
@@ -52,7 +52,7 @@ __all__ = [
     "config",
     "Environment",
     # Exceptions
-    "MployableException",
+    "LLMployableException",
     "ValidationError",
     "InvalidGitHubUsername",
     "InvalidJobDescription",

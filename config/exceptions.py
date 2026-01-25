@@ -1,13 +1,13 @@
 """
-Custom exceptions for Mployable application
+Custom exceptions for LLMployable application
 
 Provides a hierarchy of application-specific exceptions for better
 error handling and categorization.
 """
 
 
-class MployableException(Exception):
-    """Base exception for all Mployable errors"""
+class LLMployableException(Exception):
+    """Base exception for all LLMployable errors"""
 
     def __init__(
         self, message: str, error_code: str = "INTERNAL_ERROR", status_code: int = 500
@@ -35,7 +35,7 @@ class MployableException(Exception):
 
 
 # Input Validation Errors
-class ValidationError(MployableException):
+class ValidationError(LLMployableException):
     """Raised when user input validation fails"""
 
     def __init__(self, message: str, field: str = None):
@@ -61,7 +61,7 @@ class InvalidJobDescription(ValidationError):
 
 
 # External Service Errors
-class ExternalServiceError(MployableException):
+class ExternalServiceError(LLMployableException):
     """Base exception for external service failures"""
 
     def __init__(self, service: str, message: str, status_code: int = 503):
@@ -119,7 +119,7 @@ class LinkedInError(ExternalServiceError):
 
 
 # Processing Errors
-class ProcessingError(MployableException):
+class ProcessingError(LLMployableException):
     """Base exception for data processing errors"""
 
     def __init__(self, message: str, stage: str = None):
@@ -150,7 +150,7 @@ class LaTeXCompilationError(ProcessingError):
 
 
 # Configuration Errors
-class ConfigurationError(MployableException):
+class ConfigurationError(LLMployableException):
     """Configuration error"""
 
     def __init__(self, message: str, setting: str = None):
@@ -169,7 +169,7 @@ class MissingAPIKey(ConfigurationError):
 
 
 # Rate Limiting Errors
-class RateLimitError(MployableException):
+class RateLimitError(LLMployableException):
     """Rate limit exceeded"""
 
     def __init__(self, message: str = "Too many requests", retry_after: int = None):
@@ -178,7 +178,7 @@ class RateLimitError(MployableException):
 
 
 # Cache Errors
-class CacheError(MployableException):
+class CacheError(LLMployableException):
     """Cache operation failed"""
 
     def __init__(self, message: str):
@@ -186,7 +186,7 @@ class CacheError(MployableException):
 
 
 # Database Errors
-class DatabaseError(MployableException):
+class DatabaseError(LLMployableException):
     """Database operation failed"""
 
     def __init__(self, message: str):

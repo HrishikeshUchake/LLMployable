@@ -290,7 +290,7 @@
 - Health checks
 - Automated testing
 
-**How:** `docker push registry/mployable:staging && deploy-staging.sh`
+**How:** `docker push registry/llmployable:staging && deploy-staging.sh`
 
 ### Use Case 3: Production Deployment 🟡
 **Requirements Met:**

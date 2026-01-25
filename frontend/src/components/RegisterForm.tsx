@@ -50,7 +50,7 @@ export default function RegisterForm() {
           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <User className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-3xl font-black mb-2">Join Mployable</h2>
+          <h2 className="text-3xl font-black mb-2">Join LLMployable</h2>
           <p className="text-muted-foreground font-medium">Bridge the gap between your talent and your career</p>
         </div>
 

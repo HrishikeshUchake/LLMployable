@@ -1,6 +1,6 @@
-# Deployment Guide - Mployable
+# Deployment Guide - LLMployable
 
-This guide covers deploying Mployable to production environments.
+This guide covers deploying LLMployable to production environments.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ This guide covers deploying Mployable to production environments.
 ```bash
 # Clone repository
 git clone <repository-url>
-cd Mployable
+cd LLMployable
 
 # Create virtual environment
 python -m venv venv
@@ -65,10 +65,10 @@ flask run
 
 ```bash
 # Build image
-docker build -t mployable:latest .
+docker build -t llmployable:latest .
 
 # Tag for registry
-docker tag mployable:latest myregistry/mployable:latest
+docker tag llmployable:latest myregistry/llmployable:latest
 ```
 
 ### Run with Docker Compose
@@ -78,7 +78,7 @@ docker tag mployable:latest myregistry/mployable:latest
 docker-compose up -d
 
 # View logs
-docker-compose logs -f mployable
+docker-compose logs -f llmployable
 
 # Stop services
 docker-compose down
@@ -95,7 +95,7 @@ Create `.env` file for docker-compose:
 ENVIRONMENT=production
 GEMINI_API_KEY=your-key-here
 GITHUB_TOKEN=your-token-here
-DATABASE_URL=postgresql://mployable:mployable@postgres:5432/mployable
+DATABASE_URL=postgresql://llmployable:llmployable@postgres:5432/llmployable
 REDIS_URL=redis://redis:6379/0
 ```
 
@@ -122,28 +122,28 @@ curl http://localhost/api/v1/health  # Through Nginx
 
 ### Create Kubernetes Manifests
 
-Create `k8s/mployable-deployment.yaml`:
+Create `k8s/llmployable-deployment.yaml`:
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mployable
+  name: llmployable
   labels:
-    app: mployable
+    app: llmployable
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: mployable
+      app: llmployable
   template:
     metadata:
       labels:
-        app: mployable
+        app: llmployable
     spec:
       containers:
-      - name: mployable
-        image: myregistry/mployable:latest
+      - name: llmployable
+        image: myregistry/llmployable:latest
         ports:
         - containerPort: 5000
         env:
@@ -187,16 +187,16 @@ spec:
           periodSeconds: 5
 ```
 
-Create `k8s/mployable-service.yaml`:
+Create `k8s/llmployable-service.yaml`:
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: mployable-service
+  name: llmployable-service
 spec:
   selector:
-    app: mployable
+    app: llmployable
   ports:
   - protocol: TCP
     port: 80
@@ -216,8 +216,8 @@ kubectl create secret generic db-secrets \
   --from-literal=database-url=postgresql://...
 
 # Deploy application
-kubectl apply -f k8s/mployable-deployment.yaml
-kubectl apply -f k8s/mployable-service.yaml
+kubectl apply -f k8s/llmployable-deployment.yaml
+kubectl apply -f k8s/llmployable-service.yaml
 
 # Check deployment status
 kubectl get deployments
@@ -225,10 +225,10 @@ kubectl get pods
 kubectl get services
 
 # View logs
-kubectl logs -f deployment/mployable
+kubectl logs -f deployment/llmployable
 
 # Scale deployment
-kubectl scale deployment mployable --replicas=5
+kubectl scale deployment llmployable --replicas=5
 ```
 
 ## Cloud Platform Deployment
@@ -247,7 +247,7 @@ sudo apt install -y python3.11 python3.11-venv python3-pip texlive-latex-base te
 
 # Clone and setup
 git clone <repo>
-cd Mployable
+cd LLMployable
 python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -265,8 +265,8 @@ gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 app_production:create_app()
 ```bash
 # Push Docker image to ECR
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com
-docker tag mployable:latest <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/mployable:latest
-docker push <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/mployable:latest
+docker tag llmployable:latest <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/llmployable:latest
+docker push <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/llmployable:latest
 
 # Create ECS task definition and service through AWS Console or AWS CLI
 ```
@@ -281,31 +281,31 @@ Similar to Azure App Service deployment below.
 
 ```bash
 # Create resource group
-az group create --name mployable-rg --location eastus
+az group create --name llmployable-rg --location eastus
 
 # Create App Service plan
 az appservice plan create \
-  --name mployable-plan \
-  --resource-group mployable-rg \
+  --name llmployable-plan \
+  --resource-group llmployable-rg \
   --sku B2 --is-linux
 
 # Create web app
 az webapp create \
-  --resource-group mployable-rg \
-  --plan mployable-plan \
-  --name mployable-app \
+  --resource-group llmployable-rg \
+  --plan llmployable-plan \
+  --name llmployable-app \
   --runtime "PYTHON|3.11"
 
 # Configure deployment from Git
 az webapp deployment source config-zip \
-  --resource-group mployable-rg \
-  --name mployable-app \
+  --resource-group llmployable-rg \
+  --name llmployable-app \
   --src app.zip
 
 # Set application settings
 az webapp config appsettings set \
-  --resource-group mployable-rg \
-  --name mployable-app \
+  --resource-group llmployable-rg \
+  --name llmployable-app \
   --settings ENVIRONMENT=production \
               GEMINI_API_KEY=<KEY> \
               GITHUB_TOKEN=<TOKEN>
@@ -321,11 +321,11 @@ gcloud auth login
 gcloud config set project <PROJECT_ID>
 
 # Build and push image
-gcloud builds submit --tag gcr.io/<PROJECT_ID>/mployable:latest
+gcloud builds submit --tag gcr.io/<PROJECT_ID>/llmployable:latest
 
 # Deploy to Cloud Run
-gcloud run deploy mployable \
-  --image gcr.io/<PROJECT_ID>/mployable:latest \
+gcloud run deploy llmployable \
+  --image gcr.io/<PROJECT_ID>/llmployable:latest \
   --platform managed \
   --region us-central1 \
   --set-env-vars ENVIRONMENT=production,GEMINI_API_KEY=<KEY>,GITHUB_TOKEN=<TOKEN> \
@@ -355,7 +355,7 @@ GEMINI_API_KEY=<YOUR_KEY>
 GITHUB_TOKEN=<YOUR_TOKEN>
 
 # Database
-DATABASE_URL=postgresql://user:pass@host:5432/mployable
+DATABASE_URL=postgresql://user:pass@host:5432/llmployable
 
 # Cache
 CACHE_ENABLED=true
@@ -377,7 +377,7 @@ RATE_LIMIT_REQUESTS=1000
 AWS Secrets Manager:
 ```bash
 aws secretsmanager create-secret \
-  --name mployable/production \
+  --name llmployable/production \
   --secret-string file://secrets.json
 ```
 
@@ -422,7 +422,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'mployable'
+  - job_name: 'llmployable'
     static_configs:
       - targets: ['localhost:5000']
     metrics_path: '/metrics'

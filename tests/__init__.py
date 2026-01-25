@@ -1,1 +1,1 @@
-"""Test suite for Mployable"""
+"""Test suite for LLMployable"""

@@ -1,4 +1,4 @@
-# Mployable - Complete Project Index
+# LLMployable - Complete Project Index
 
 ## 📋 Quick Navigation
 
@@ -31,7 +31,7 @@
 ## 📁 Project Structure
 
 ```
-Mployable/
+LLMployable/
 │
 ├── 📂 frontend/                        # Modern React Frontend
 │   ├── src/                            # React application source
@@ -361,7 +361,7 @@ Provides:
 ```bash
 # 1. Setup
 git clone <repo>
-cd Mployable
+cd LLMployable
 cp .env.example .env
 
 # 2. Configure
@@ -371,7 +371,7 @@ cp .env.example .env
 docker-compose up -d
 
 # 4. Test
-docker-compose exec mployable pytest tests/
+docker-compose exec llmployable pytest tests/
 
 # 5. Access
 open http://localhost:5000

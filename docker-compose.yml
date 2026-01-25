@@ -2,9 +2,9 @@ version: '3.9'
 
 services:
   # Main application service
-  mployable:
+  llmployable:
     build: .
-    container_name: mployable-app
+    container_name: llmployable-app
     ports:
       - "5000:5000"
     environment:
@@ -14,8 +14,8 @@ services:
       DEBUG: "false"
       LOG_LEVEL: INFO
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: mongodb://mongodb:27017/mployable
-      DATABASE_NAME: mployable
+      DATABASE_URL: mongodb://mongodb:27017/llmployable
+      DATABASE_NAME: llmployable
       DATABASE_HOST: mongodb
       DATABASE_PORT: 27017
       GEMINI_API_KEY: ${GEMINI_API_KEY}
@@ -28,7 +28,7 @@ services:
       - ./uploads:/app/uploads
       - ./temp:/app/temp
     networks:
-      - mployable-network
+      - llmployable-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
@@ -40,13 +40,13 @@ services:
   # Redis for caching
   redis:
     image: redis:7-alpine
-    container_name: mployable-redis
+    container_name: llmployable-redis
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
-      - mployable-network
+      - llmployable-network
     restart: unless-stopped
     command: redis-server --appendonly yes
     healthcheck:
@@ -58,18 +58,18 @@ services:
   # MongoDB database
   mongodb:
     image: mongo:7
-    container_name: mployable-mongodb
+    container_name: llmployable-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
-      MONGO_INITDB_DATABASE: mployable
+      MONGO_INITDB_DATABASE: llmployable
     ports:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
       - mongodb-config:/data/configdb
     networks:
-      - mployable-network
+      - llmployable-network
     restart: unless-stopped
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
@@ -81,15 +81,15 @@ services:
   # Nginx reverse proxy (optional, for production-like setup)
   nginx:
     image: nginx:alpine
-    container_name: mployable-nginx
+    container_name: llmployable-nginx
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - mployable
+      - llmployable
     networks:
-      - mployable-network
+      - llmployable-network
     restart: unless-stopped
 
 volumes:
@@ -98,5 +98,5 @@ volumes:
   mongodb-config:
 
 networks:
-  mployable-network:
+  llmployable-network:
     driver: bridge

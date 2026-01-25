@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Mployable
+# Multi-stage Dockerfile for LLMployable
 
 # Stage 1: Frontend Builder
 FROM node:20-slim as frontend-builder

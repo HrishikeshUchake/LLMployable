@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mployable has been transformed from a **demo/hackathon application** to a **production-ready system** with enterprise-grade features. MongoDB has been integrated as the primary database.
+LLMployable has been transformed from a **demo/hackathon application** to a **production-ready system** with enterprise-grade features. MongoDB has been integrated as the primary database.
 
 ## What's Been Completed
 
@@ -82,7 +82,7 @@ Production-ready Flask application with:
 #### 9. Docker Configuration
 - **Dockerfile:** Multi-stage build for optimization
 - **docker-compose.yml:** Complete services stack
-  - Mployable app service
+  - LLMployable app service
   - Redis for caching
   - MongoDB for persistence
   - Nginx reverse proxy
@@ -269,9 +269,9 @@ python app_production.py
 ### 2. Staging Deployment
 ```bash
 # Build and push Docker image
-docker build -t mployable:staging .
-docker tag mployable:staging registry.example.com/mployable:staging
-docker push registry.example.com/mployable:staging
+docker build -t llmployable:staging .
+docker tag llmployable:staging registry.example.com/llmployable:staging
+docker push registry.example.com/llmployable:staging
 
 # Deploy with docker-compose or Kubernetes
 docker-compose -f docker-compose.staging.yml up -d
@@ -297,7 +297,7 @@ curl http://localhost:5000/api/v1/health/detailed
 ### Logs Access
 ```bash
 # Docker
-docker-compose logs -f mployable
+docker-compose logs -f llmployable
 
 # Direct files
 tail -f logs/app.log
@@ -309,11 +309,11 @@ tail -f logs/error.log
 ```bash
 # MongoDB shell
 docker-compose exec mongodb mongosh
-use mployable
+use llmployable
 db.resumes.find()
 
 # Backups
-docker exec mployable-mongodb mongodump --out /backup
+docker exec llmployable-mongodb mongodump --out /backup
 ```
 
 ## What's Left (Future Phases)
@@ -372,7 +372,7 @@ docker exec mployable-mongodb mongodump --out /backup
 ```bash
 # 1. Clone and setup
 git clone <repo>
-cd Mployable
+cd LLMployable
 cp .env.example .env
 
 # 2. Add API keys to .env
@@ -417,7 +417,7 @@ open http://localhost:5000
 ## Key Files Structure
 
 ```
-Mployable/
+LLMployable/
 ├── config/
 │   ├── __init__.py
 │   ├── config.py              # Configuration management
@@ -450,7 +450,7 @@ Mployable/
 
 ## Conclusion
 
-Mployable is now **production-ready** with:
+LLMployable is now **production-ready** with:
 - ✅ Professional error handling
 - ✅ Comprehensive logging
 - ✅ MongoDB persistence
