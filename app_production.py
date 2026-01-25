@@ -43,6 +43,7 @@ from utils.validators import InputValidator
 from scrapers.github_scraper import GitHubScraper
 from scrapers.linkedin_scraper import LinkedInScraper
 from analyzer.job_analyzer import JobAnalyzer
+from analyzer.interview_generator import InterviewGenerator
 from generator.resume_generator import ResumeGenerator
 from generator.latex_compiler import LaTeXCompiler
 
@@ -74,6 +75,7 @@ try:
     github_scraper = GitHubScraper()
     linkedin_scraper = LinkedInScraper()
     job_analyzer = JobAnalyzer()
+    interview_generator = InterviewGenerator()
     resume_generator = ResumeGenerator()
     latex_compiler = LaTeXCompiler()
     logger.info("All components initialized successfully")
@@ -545,6 +547,46 @@ def generate_resume():
                 {
                     "error": "INTERNAL_ERROR",
                     "message": "An unexpected error occurred during resume generation",
+                    "status": 500,
+                }
+            ),
+            500,
+        )
+
+
+@app.route("/api/v1/interview-prep", methods=["POST"])
+def interview_prep():
+    """
+    Endpoint to generate interview preparation tips and questions
+    """
+    try:
+        logger.info(f"[{request.request_id}] Interview prep request")
+        data = request.json
+        if not data:
+            raise ValidationError("Request body is required")
+            
+        job_description = data.get("job_description", "").strip()
+
+        if not job_description:
+            raise ValidationError("Job description is required")
+
+        # Analyze job description
+        job_requirements = job_analyzer.analyze(job_description)
+
+        # Generate interview prep
+        prep_data = interview_generator.generate(job_requirements)
+
+        return jsonify(prep_data)
+
+    except ValidationError as e:
+        return jsonify({"error": "VALIDATION_ERROR", "message": str(e)}), 400
+    except Exception as e:
+        logger.error(f"Interview prep generation failed: {e}", exc_info=True)
+        return (
+            jsonify(
+                {
+                    "error": "INTERNAL_ERROR",
+                    "message": "An unexpected error occurred during interview prep generation",
                     "status": 500,
                 }
             ),
