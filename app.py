@@ -319,7 +319,15 @@ def generate_resume():
         # Step 2: Analyze job description
         job_requirements = job_analyzer.analyze(job_description)
 
-        # Step 3: Generate tailored resume content
+        # Step 3: Refine GitHub projects based on job requirements
+        if "github" in profile_data and "repositories" in profile_data["github"]:
+            job_skills = job_requirements.get("skills", {})
+            relevant_projects = github_scraper.select_relevant_projects(
+                profile_data["github"]["repositories"], job_skills
+            )
+            profile_data["github"]["top_projects"] = relevant_projects
+
+        # Step 4: Generate tailored resume content
         resume_content = resume_generator.generate(profile_data, job_requirements)
 
         # Step 4: Compile to PDF

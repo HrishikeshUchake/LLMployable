@@ -144,3 +144,63 @@ class GitHubScraper:
                 exc_info=True,
             )
             raise GitHubAPIError(f"Failed to scrape GitHub profile: {str(e)}")
+
+    def select_relevant_projects(
+        self, repos: List[Dict], job_skills: Dict[str, List[str]]
+    ) -> List[Dict]:
+        """
+        Select projects that best match the job requirements
+
+        Args:
+            repos: List of repositories
+            job_skills: Dictionary of required skills by category
+
+        Returns:
+            List of relevant repositories sorted by relevance
+        """
+        if not repos:
+            return []
+
+        # Flatten all job skills into a single set for easy matching
+        all_required_skills = set()
+        for skills in job_skills.values():
+            if isinstance(skills, list):
+                all_required_skills.update([s.lower() for s in skills])
+
+        if not all_required_skills:
+            # Fallback to stars if no skills identified
+            return sorted(repos, key=lambda x: x.get("stars", 0), reverse=True)[
+                : config.GITHUB_MAX_TOP_PROJECTS
+            ]
+
+        scored_repos = []
+        for repo in repos:
+            score = 0
+            repo_name = repo.get("name", "").lower()
+            repo_desc = (repo.get("description") or "").lower()
+            repo_lang = (repo.get("language") or "").lower()
+            repo_topics = [t.lower() for t in repo.get("topics", [])]
+
+            # Match language (High weight)
+            if repo_lang in all_required_skills:
+                score += 5
+
+            # Match topics (Medium weight)
+            for topic in repo_topics:
+                if topic in all_required_skills:
+                    score += 3
+
+            # Match keywords in name/description (Low weight)
+            for skill in all_required_skills:
+                if skill in repo_name or skill in repo_desc:
+                    score += 1
+
+            scored_repos.append((score, repo))
+
+        # Sort by score (desc), then stars (desc) as tie-breaker
+        sorted_repos = sorted(
+            scored_repos, key=lambda x: (x[0], x[1].get("stars", 0)), reverse=True
+        )
+
+        # Return only the repository dictionaries
+        return [repo for score, repo in sorted_repos[: config.GITHUB_MAX_TOP_PROJECTS]]
