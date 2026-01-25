@@ -54,10 +54,10 @@ ${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`
       transition={{ delay: 0.3 }}
       className="mt-8 space-y-6"
     >
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden">
-        <div className="bg-slate-900 p-6 text-white flex items-center justify-between">
+      <div className="bg-card rounded-[2rem] border border-border shadow-xl overflow-hidden">
+        <div className="bg-primary p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Trophy className="w-6 h-6 text-indigo-400" />
+            <Trophy className="w-6 h-6 text-success" />
             <h3 className="text-xl font-black tracking-tight text-white mb-0">Interview Game Plan</h3>
           </div>
           <button 
@@ -66,7 +66,7 @@ ${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`
             className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition-all text-sm font-bold border border-white/10"
           >
             {copied ? (
-              <><Check className="w-4 h-4 text-emerald-400" /> Copied!</>
+              <><Check className="w-4 h-4 text-success" /> Copied!</>
             ) : (
               <><Copy className="w-4 h-4" /> Copy Plan</>
             )}
@@ -75,19 +75,19 @@ ${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`
         
         <div className="p-8 space-y-10">
           <div className="relative group">
-            <div className="absolute -inset-4 bg-indigo-50/50 rounded-[2rem] -z-10 group-hover:bg-indigo-50 transition-colors" />
-            <h4 className="text-indigo-900 font-bold mb-3 flex items-center gap-2 text-lg">
-              <Lightbulb className="w-6 h-6 text-indigo-600" /> Winning Strategy
+            <div className="absolute -inset-4 bg-muted/50 rounded-[2rem] -z-10 group-hover:bg-muted transition-colors" />
+            <h4 className="text-primary font-bold mb-3 flex items-center gap-2 text-lg">
+              <Lightbulb className="w-6 h-6 text-primary" /> Winning Strategy
             </h4>
-            <p className="text-indigo-800 text-sm leading-relaxed font-semibold italic">
+            <p className="text-primary/80 text-sm leading-relaxed font-semibold italic">
               "{winningStrategy}"
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h4 className="text-slate-900 font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-indigo-600" /> Actionable Tips
+              <h4 className="text-foreground font-black text-sm uppercase tracking-widest flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" /> Actionable Tips
               </h4>
               <div className="space-y-3">
                 {tips.length > 0 ? tips.map((tip, i) => (
@@ -96,43 +96,43 @@ ${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="flex gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 items-start hover:border-indigo-100 transition-colors"
+                    className="flex gap-3 p-4 rounded-2xl bg-muted/30 border border-border items-start hover:border-primary/20 transition-colors"
                   >
-                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0" />
-                    <p className="text-sm text-slate-700 font-medium leading-relaxed">{tip}</p>
+                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    <p className="text-sm text-foreground/70 font-medium leading-relaxed">{tip}</p>
                   </motion.div>
-                )) : <p className="text-xs text-slate-400 italic">No specific tips generated.</p>}
+                )) : <p className="text-xs text-muted-foreground italic">No specific tips generated.</p>}
               </div>
             </div>
 
-            <div className="bg-slate-900 rounded-3xl p-6 text-white flex flex-col justify-center relative overflow-hidden">
+            <div className="bg-primary rounded-3xl p-6 text-white flex flex-col justify-center relative overflow-hidden">
                <div className="absolute top-0 right-0 p-8 opacity-10">
                   <Brain className="w-24 h-24" />
                </div>
-               <p className="text-indigo-400 font-bold text-xs uppercase tracking-tighter mb-4">Preparation Scope</p>
+               <p className="text-success font-bold text-xs uppercase tracking-tighter mb-4">Preparation Scope</p>
                <div className="space-y-4 relative z-10">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-xs font-medium">Technical Depth</span>
-                    <span className="text-white font-bold text-xs uppercase bg-indigo-600 px-2 py-0.5 rounded">High</span>
+                    <span className="text-white/60 text-xs font-medium">Technical Depth</span>
+                    <span className="text-white font-bold text-xs uppercase bg-white/10 px-2 py-0.5 rounded">High</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-xs font-medium">Behavioral Focus</span>
-                    <span className="text-white font-bold text-xs uppercase bg-indigo-600 px-2 py-0.5 rounded">Strategic</span>
+                    <span className="text-white/60 text-xs font-medium">Behavioral Focus</span>
+                    <span className="text-white font-bold text-xs uppercase bg-white/10 px-2 py-0.5 rounded">Strategic</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-xs font-medium">Complexity</span>
-                    <span className="text-white font-bold text-xs uppercase bg-indigo-600 px-2 py-0.5 rounded">Level 4</span>
+                    <span className="text-white/60 text-xs font-medium">Complexity</span>
+                    <span className="text-white font-bold text-xs uppercase bg-white/10 px-2 py-0.5 rounded">Level 4</span>
                   </div>
                </div>
             </div>
           </div>
 
-          <div className="space-y-8 pt-4 border-t border-slate-100">
+          <div className="space-y-8 pt-4 border-t border-border">
             {techQs.length > 0 && (
               <PrepSection 
                 title="Technical Excellence" 
                 subtitle="Skills & Implementations"
-                icon={<Brain className="w-5 h-5 text-indigo-600" />} 
+                icon={<Brain className="w-5 h-5 text-primary" />} 
                 questions={techQs}
               />
             )}
@@ -141,7 +141,7 @@ ${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`
               <PrepSection 
                 title="Behavioral Alignment" 
                 subtitle="Culture & Soft Skills"
-                icon={<MessageSquare className="w-5 h-5 text-indigo-600" />} 
+                icon={<MessageSquare className="w-5 h-5 text-primary" />} 
                 questions={behavioralQs}
               />
             )}
@@ -150,7 +150,7 @@ ${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`
               <PrepSection 
                 title="Situational Awareness" 
                 subtitle="Scenario Based Challenges"
-                icon={<Briefcase className="w-5 h-5 text-indigo-600" />} 
+                icon={<Briefcase className="w-5 h-5 text-primary" />} 
                 questions={situationalQs}
               />
             )}
@@ -165,12 +165,12 @@ function PrepSection({ title, subtitle, icon, questions }: { title: string; subt
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 mb-2">
-        <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
+        <div className="p-2.5 rounded-xl bg-muted border border-border">
           {icon}
         </div>
         <div>
-          <h4 className="text-slate-900 font-black text-base leading-none mb-1 tracking-tight">{title}</h4>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{subtitle}</p>
+          <h4 className="text-foreground font-black text-base leading-none mb-1 tracking-tight">{title}</h4>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{subtitle}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3">

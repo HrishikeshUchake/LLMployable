@@ -226,7 +226,7 @@ export default function ResumeForm() {
                   <button
                     type="submit"
                     disabled={isPending}
-                    className="w-full group bg-foreground hover:bg-primary disabled:opacity-50 text-white font-black py-6 rounded-[2rem] transition-smooth shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 overflow-hidden relative active:scale-[0.98]"
+                    className="w-full group bg-foreground hover:bg-primary disabled:opacity-50 text-background font-black py-6 rounded-[2rem] transition-smooth flex items-center justify-center gap-4 overflow-hidden relative active:scale-[0.98]"
                   >
                     <AnimatePresence mode="wait">
                       {isPending ? (
@@ -290,7 +290,7 @@ export default function ResumeForm() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.5 }}
-                          className="mt-12 p-10 bg-gradient-to-br from-primary to-primary-dark rounded-[3rem] text-white shadow-2xl relative overflow-hidden group"
+                          className="mt-12 p-10 bg-gradient-to-br from-primary to-primary-dark rounded-[3rem] text-primary-foreground shadow-2xl relative overflow-hidden group"
                         >
                           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
                               <Mic className="w-40 h-40 -rotate-12" />
@@ -301,13 +301,13 @@ export default function ResumeForm() {
                               <Sparkles className="w-3 h-3" /> New: Conversational AI
                             </span>
                             <h3 className="text-3xl font-black tracking-tighter mb-4">Ready for the real deal?</h3>
-                            <p className="text-white/80 font-medium mb-8 max-w-xl text-lg leading-relaxed">
+                            <p className="opacity-80 font-medium mb-8 max-w-xl text-lg leading-relaxed">
                               Don't just read the questions. Practice them with our **AI Mock Interviewer**. 
                               Powered by ElevenLabs, you'll get real-time feedback on your voice, tone, and confidence.
                             </p>
                             <button 
                               onClick={() => navigate('/mock-interview')}
-                              className="bg-white text-primary px-8 py-4 rounded-2xl font-black text-lg hover:bg-opacity-90 transform active:scale-95 transition-all flex items-center gap-3 shadow-xl"
+                              className="bg-primary-foreground text-primary px-8 py-4 rounded-2xl font-black text-lg hover:bg-opacity-90 transform active:scale-95 transition-all flex items-center gap-3 shadow-xl"
                             >
                               Start Voice Interview <ArrowRight className="w-5 h-5" />
                             </button>
@@ -327,14 +327,14 @@ export default function ResumeForm() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-primary rounded-[3rem] p-10 text-white shadow-2xl shadow-primary/20 relative overflow-hidden"
+            className="bg-muted/50 rounded-[3rem] p-10 border border-border/50 shadow-sm relative overflow-hidden group hover:shadow-xl transition-smooth"
           >
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-                <ShieldCheck className="w-32 h-32 rotate-12" />
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
+                <ShieldCheck className="w-32 h-32 rotate-12 text-primary" />
             </div>
             
-            <h3 className="text-2xl font-black mb-8 flex items-center gap-3">
-              <Info className="w-6 h-6" /> Best Practices
+            <h3 className="text-2xl font-black mb-8 flex items-center gap-3 text-foreground">
+              <Info className="w-6 h-6 text-primary" /> Best Practices
             </h3>
             
             <ul className="space-y-6">
@@ -344,12 +344,12 @@ export default function ResumeForm() {
                 { title: "Target Focus", text: "High-quality job descriptions lead to 10x better matching." }
               ].map((tip, i) => (
                 <li key={i} className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-black shrink-0 mt-1">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-black shrink-0 mt-1 text-primary">
                     {i + 1}
                   </div>
                   <div>
-                    <p className="font-black uppercase tracking-wider text-[10px] opacity-70 mb-1">{tip.title}</p>
-                    <p className="text-sm font-medium leading-relaxed opacity-90">{tip.text}</p>
+                    <p className="font-black uppercase tracking-wider text-[10px] text-muted-foreground mb-1">{tip.title}</p>
+                    <p className="text-sm font-bold leading-relaxed text-foreground/80">{tip.text}</p>
                   </div>
                 </li>
               ))}

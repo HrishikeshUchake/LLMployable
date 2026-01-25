@@ -157,7 +157,7 @@ export default function Dashboard() {
         >
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-4xl font-black tracking-tight">
-              Workspace<span className="text-primary">.</span>
+              Workspace<span className="text-accent-dot">.</span>
             </h1>
           </div>
           <p className="text-muted-foreground text-lg flex items-center gap-2">
@@ -170,7 +170,7 @@ export default function Dashboard() {
         >
           <Link 
             to="/" 
-            className="group inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-primary/20 transition-smooth hover:-translate-y-1 active:translate-y-0"
+            className="group inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-primary-foreground px-8 py-4 rounded-2xl font-black shadow-xl shadow-primary/20 transition-smooth hover:-translate-y-1 active:translate-y-0"
           >
             <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
             Create New Resume
@@ -317,7 +317,7 @@ export default function Dashboard() {
                   <div className="flex justify-between items-start mb-6">
                     <button 
                       onClick={() => setViewingJobDetails(resume)}
-                      className="p-3.5 bg-muted rounded-2xl text-primary group-hover:bg-primary group-hover:text-white transition-smooth shadow-inner cursor-pointer hover:scale-105"
+                      className="p-3.5 bg-muted rounded-2xl text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-smooth shadow-inner cursor-pointer hover:scale-105"
                       title="View Job Details"
                     >
                       <FileText className="w-6 h-6" />
@@ -339,7 +339,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-2 gap-3">
                     <button 
                       onClick={() => handlePreview(resume.id)}
-                      className="bg-primary hover:bg-primary-dark text-white py-3 rounded-2xl text-sm font-black transition-smooth flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                      className="bg-primary hover:bg-primary-dark text-primary-foreground py-3 rounded-2xl text-sm font-black transition-smooth flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                     >
                       {previewResumeId === resume.id && !previewUrl ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -351,7 +351,7 @@ export default function Dashboard() {
                     <div className="flex gap-2">
                        <button 
                         onClick={() => handleDownload(resume.id, resume.job_title)}
-                        className="flex-1 bg-muted hover:bg-slate-200 text-foreground py-3 rounded-2xl transition-smooth flex items-center justify-center border border-transparent hover:border-white/20"
+                        className="flex-1 bg-muted hover:bg-muted/80 text-foreground py-3 rounded-2xl transition-smooth flex items-center justify-center border border-transparent hover:border-white/20"
                         title="Download PDF"
                       >
                         <Download className="w-4 h-4" />
@@ -459,13 +459,13 @@ export default function Dashboard() {
                 </div>
                 <button 
                     onClick={closePreview}
-                    className="p-2.5 bg-muted hover:bg-slate-200 text-foreground rounded-xl transition-smooth"
+                    className="p-2.5 bg-muted hover:bg-muted/80 text-foreground rounded-xl transition-smooth"
                 >
                     <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <div className="flex-1 w-full bg-slate-100/50 p-4 sm:p-8 overflow-auto flex justify-center">
+              <div className="flex-1 w-full bg-muted/50/50 p-4 sm:p-8 overflow-auto flex justify-center">
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -487,14 +487,14 @@ export default function Dashboard() {
                         link.setAttribute('download', 'tailored_resume.pdf');
                         link.click();
                     }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-white px-10 py-3.5 rounded-2xl font-black shadow-xl shadow-primary/25 transition-smooth"
+                    className="w-full sm:w-auto flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-primary-foreground px-10 py-3.5 rounded-2xl font-black shadow-xl shadow-primary/25 transition-smooth"
                 >
                     <Download className="w-5 h-5" />
                     Download PDF Document
                 </button>
                 <button 
                     onClick={closePreview}
-                    className="w-full sm:w-auto px-10 py-3.5 bg-muted hover:bg-slate-200 text-foreground rounded-2xl font-bold transition-smooth"
+                    className="w-full sm:w-auto px-10 py-3.5 bg-muted hover:bg-muted/80 text-foreground rounded-2xl font-bold transition-smooth"
                 >
                     Dismiss
                 </button>
@@ -526,7 +526,7 @@ export default function Dashboard() {
                 </div>
                 <button 
                   onClick={() => setViewingJobDetails(null)}
-                  className="p-2.5 bg-muted hover:bg-slate-200 text-foreground rounded-xl transition-smooth"
+                  className="p-2.5 bg-muted hover:bg-muted/80 text-foreground rounded-xl transition-smooth"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -547,7 +547,7 @@ export default function Dashboard() {
               <div className="p-6 bg-card border-t border-muted flex justify-end">
                 <button 
                   onClick={() => setViewingJobDetails(null)}
-                  className="px-8 py-3 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold transition-smooth shadow-lg shadow-primary/20"
+                  className="px-8 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-2xl font-bold transition-smooth shadow-lg shadow-primary/20"
                 >
                   Close Details
                 </button>

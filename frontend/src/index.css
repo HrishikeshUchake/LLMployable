@@ -1,41 +1,54 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: var(--color-indigo-600);
-  --color-primary-dark: var(--color-indigo-700);
-  --color-primary-light: var(--color-indigo-400);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent-dot: var(--accent-dot);
   
-  --color-success: var(--color-emerald-500);
-  --color-warning: var(--color-amber-500);
-  --color-danger: var(--color-rose-500);
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 :root {
   font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
+
+  --primary: #18181B;
+  --primary-dark: #09090B;
+  --primary-light: #27272A;
+  --primary-foreground: #FFFFFF;
   
-  /* Modern Neutral Palette */
-  --background: #fdfdfe;
-  --foreground: #020617;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --border: #e2e8f0;
-  --card: #ffffff;
-  --card-foreground: #020617;
+  --background: #FFFFFF;
+  --foreground: #18181B;
+  --muted: #F4F4F5;
+  --muted-foreground: #71717A;
+  --accent-dot: #71717A;
+  --border: #E4E4E7;
+  --card: #FFFFFF;
+  --card-foreground: #18181B;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #020617;
-    --foreground: #f8fafc;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --border: #1e293b;
-    --card: #0f172a;
-    --card-foreground: #f8fafc;
+    --primary: #F4F4F5;
+    --primary-dark: #FAFAFA;
+    --primary-light: #D4D4D8;
+    --primary-foreground: #09090B;
+
+    --background: #09090B;
+    --foreground: #FAFAFA;
+    --muted: #18181B;
+    --muted-foreground: #D4D4D8;
+    --accent-dot: #52525B;
+    --border: #27272A;
+    --card: #18181B;
+    --card-foreground: #FAFAFA;
   }
 }
 
@@ -52,7 +65,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism utilities */
 .glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
@@ -60,11 +72,10 @@ body {
 }
 
 .dark .glass {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(9, 9, 11, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Smooth transitions */
 .transition-smooth {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -75,7 +86,6 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -94,8 +104,7 @@ button:focus-visible {
   background: #cbd5e1;
 }
 
-/* Modern Text Selection */
 ::selection {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--primary-foreground);
 }
