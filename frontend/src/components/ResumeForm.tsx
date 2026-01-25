@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import InterviewPrepPlan from './InterviewPrepPlan';
 import LoadingProgress from './LoadingProgress';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5001');
 
 interface ActionState {
   type: 'idle' | 'loading' | 'success' | 'error';

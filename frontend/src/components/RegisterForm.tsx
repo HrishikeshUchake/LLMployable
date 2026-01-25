@@ -4,7 +4,7 @@ import { Mail, Lock, User, Loader2, AlertCircle, BadgeCheck } from 'lucide-react
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5001');
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({

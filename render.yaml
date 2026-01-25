@@ -1,7 +1,7 @@
 services:
   # Unified Web Service (Frontend + Backend)
   - type: web
-    name: mployable
+    name: llmployable
     env: docker
     dockerContext: .
     plan: free
