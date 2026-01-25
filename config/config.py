@@ -97,10 +97,19 @@ class Config:
         """Load configuration from environment variables"""
         load_dotenv()
 
-        # Load values from environment
-        cls.ENVIRONMENT = Environment(os.getenv("ENVIRONMENT", "development"))
-        cls.DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-        cls.LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+        # Load values from environment - use existing class values as defaults
+        # instead of hardcoded strings to respect subclass overrides
+        cls.ENVIRONMENT = Environment(os.getenv("ENVIRONMENT", cls.ENVIRONMENT.value if hasattr(cls.ENVIRONMENT, 'value') else cls.ENVIRONMENT))
+        
+        # Helper to get boolean env or return default
+        def get_bool(key, default):
+            val = os.getenv(key)
+            if val is None:
+                return default
+            return val.lower() == "true"
+
+        cls.DEBUG = get_bool("DEBUG", cls.DEBUG)
+        cls.LOG_LEVEL = os.getenv("LOG_LEVEL", cls.LOG_LEVEL)
         cls.HOST = os.getenv("HOST", cls.HOST)
         cls.PORT = int(os.getenv("PORT", cls.PORT))
         cls.WORKERS = int(os.getenv("WORKERS", cls.WORKERS))
@@ -131,7 +140,7 @@ class Config:
         )
 
         # Cache
-        cls.CACHE_ENABLED = os.getenv("CACHE_ENABLED", "true").lower() == "true"
+        cls.CACHE_ENABLED = get_bool("CACHE_ENABLED", cls.CACHE_ENABLED)
         cls.REDIS_URL = os.getenv("REDIS_URL", cls.REDIS_URL)
 
         # Database
