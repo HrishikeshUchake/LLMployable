@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Rocket, LogIn, UserPlus, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Rocket, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 

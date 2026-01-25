@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, Loader2, AlertCircle, CheckCircle2, BadgeCheck } from 'lucide-react';
+import { Mail, Lock, User, Loader2, AlertCircle, BadgeCheck } from 'lucide-react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 

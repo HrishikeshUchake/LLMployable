@@ -6,7 +6,7 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import Dashboard from './components/Dashboard';
 import { motion } from 'framer-motion';
-import { Rocket, Sparkles, Shield, Zap } from 'lucide-react';
+import { Sparkles, Shield, Zap } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();

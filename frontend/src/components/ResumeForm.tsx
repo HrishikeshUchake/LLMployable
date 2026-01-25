@@ -21,7 +21,7 @@ interface ActionState {
   };
 }
 
-async function generateResumeAction(prevState: ActionState, formData: FormData): Promise<ActionState> {
+async function generateResumeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const github = formData.get('github_username') as string;
   const linkedin = formData.get('linkedin_data') as File;
   const jobDescription = formData.get('job_description') as string;

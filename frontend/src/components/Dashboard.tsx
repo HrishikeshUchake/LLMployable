@@ -2,8 +2,8 @@ import { useState, useEffect, useOptimistic, Activity } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   FileText, Briefcase, Calendar, Download, Loader2, 
-  AlertCircle, Trash2, History, ExternalLink, Eye, X,
-  Plus, Search, Filter, TrendingUp, Clock, ChevronRight,
+  AlertCircle, Trash2, History, Eye, X,
+  Plus, Search, TrendingUp, Clock, ChevronRight,
   Github
 } from 'lucide-react';
 import axios from 'axios';
