@@ -238,7 +238,6 @@ Only return valid JSON, no additional text."""
                     if github_data.get("username")
                     else ""
                 )
-                parsed["linkedin_url"] = linkedin_data.get("url", "")
 
                 return parsed
         except Exception as e:
@@ -337,7 +336,6 @@ Only return valid JSON, no additional text."""
                 if github_data.get("username")
                 else ""
             ),
-            "linkedin_url": linkedin_data.get("url", ""),
             "summary": linkedin_data.get("summary")
             or github_data.get("bio", "Experienced software developer"),
             "skills": final_skills,

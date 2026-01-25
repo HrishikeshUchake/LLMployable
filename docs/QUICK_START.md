@@ -107,7 +107,6 @@ curl -X POST http://localhost:5000/api/v1/generate-resume \
   -H "Content-Type: application/json" \
   -d '{
     "github_username": "torvalds",
-    "linkedin_url": "",
     "job_description": "We are looking for a C programmer with 10+ years of experience working on operating systems and kernel development. Required skills: C, Assembly, Linux, Git. Nice to have: Rust, Python."
   }' \
   -o resume.pdf

@@ -67,35 +67,6 @@ class TestInputValidator:
         result = InputValidator.validate_job_description(desc)
         assert result == desc.strip()
 
-    def test_valid_linkedin_url(self):
-        """Test valid LinkedIn URL"""
-        valid_urls = [
-            "https://www.linkedin.com/in/username/",
-            "https://linkedin.com/in/username",
-            "http://www.linkedin.com/in/john-doe/",
-        ]
-
-        for url in valid_urls:
-            result = InputValidator.validate_linkedin_url(url)
-            assert result == url
-
-    def test_empty_linkedin_url(self):
-        """Test that empty LinkedIn URL is optional"""
-        result = InputValidator.validate_linkedin_url("")
-        assert result == ""
-
-    def test_invalid_linkedin_url(self):
-        """Test invalid LinkedIn URL"""
-        invalid_urls = [
-            "https://github.com/user",
-            "not-a-url",
-            "https://facebook.com/user",
-        ]
-
-        for url in invalid_urls:
-            with pytest.raises(ValueError):
-                InputValidator.validate_linkedin_url(url)
-
     def test_validate_complete_request(self):
         """Test complete request validation"""
         github = "torvalds"
@@ -103,15 +74,13 @@ class TestInputValidator:
             "We are looking for a seasoned Python developer with 10+ years of experience "
             "in building scalable systems. You will work with Django, PostgreSQL, and Docker."
         )
-        linkedin = "https://www.linkedin.com/in/test/"
 
-        result_github, result_job, result_linkedin = InputValidator.validate_request(
-            github, job_desc, linkedin
+        result_github, result_job = InputValidator.validate_request(
+            github, job_desc
         )
 
         assert result_github == github
         assert result_job == job_desc
-        assert result_linkedin == linkedin
 
 
 class TestGitHubScraper:
@@ -315,7 +284,6 @@ class TestFlaskApp:
                     "/api/v1/generate-resume",
                     json={
                         "github_username": "torvalds",
-                        "linkedin_url": "",
                         "job_description": "We need a C programmer with 10+ years "
                         "of experience working on operating systems",
                     },
@@ -330,7 +298,6 @@ class TestFlaskApp:
             "/api/v1/generate-resume",
             json={
                 "github_username": "torvalds",
-                "linkedin_url": "",
                 "job_description": "",
             },
         )
@@ -345,7 +312,6 @@ class TestFlaskApp:
             "/api/v1/generate-resume",
             json={
                 "github_username": "",
-                "linkedin_url": "",
                 "job_description": "We need a developer with 5+ years experience",
             },
         )

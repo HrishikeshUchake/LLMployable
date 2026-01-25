@@ -74,7 +74,7 @@ This document provides technical reference for the production implementation of 
 1. Client submits form with:
    - github_username (validated)
    - job_description (validated)
-   - linkedin_url (optional, validated)
+   - linkedin_data ZIP file (optional)
          ↓
 2. Flask endpoint receives POST /api/v1/generate-resume
    - Generate request_id: "a1b2c3d4"
@@ -230,11 +230,6 @@ User Input
 │ 2. validate_job_description()    │
 │    - Check length (50-50000)     │
 │    - Raise InvalidJobDescription │
-├──────────────────────────────────┤
-│ 3. validate_linkedin_url()       │
-│    - Check URL pattern           │
-│    - Optional (empty allowed)    │
-│    - Raise ValueError            │
 └──────────────────────────────────┘
     ↓
 Cleaned Input (or Exception raised)
@@ -248,9 +243,7 @@ TestInputValidator
 ├── test_valid_github_username
 ├── test_invalid_github_username_format
 ├── test_valid_job_description
-├── test_invalid_job_description_too_short
-├── test_valid_linkedin_url
-└── test_invalid_linkedin_url
+└── test_invalid_job_description_too_short
 
 TestGitHubScraper
 ├── test_scrape_profile_success (mocked)

@@ -22,9 +22,6 @@ class InputValidator:
     MIN_JOB_DESC_LENGTH = 50
     MAX_JOB_DESC_LENGTH = 50000
 
-    # LinkedIn URL pattern
-    LINKEDIN_URL_PATTERN = r"^https?://(?:www\.)?linkedin\.com/.*"
-
     @classmethod
     def validate_github_username(cls, username: str) -> str:
         """
@@ -84,54 +81,27 @@ class InputValidator:
         return job_desc
 
     @classmethod
-    def validate_linkedin_url(cls, url: str) -> str:
-        """
-        Validate LinkedIn profile URL
-
-        Args:
-            url: LinkedIn URL to validate
-
-        Returns:
-            Cleaned URL
-
-        Raises:
-            ValueError: If URL is invalid
-        """
-        if not url:
-            return ""  # Optional field
-
-        url = url.strip()
-
-        if not re.match(cls.LINKEDIN_URL_PATTERN, url, re.IGNORECASE):
-            raise ValueError("Invalid LinkedIn URL format")
-
-        return url
-
-    @classmethod
     def validate_request(
-        cls, github_username: str, job_description: str, linkedin_url: str = ""
-    ) -> Tuple[str, str, str]:
+        cls, github_username: str, job_description: str
+    ) -> Tuple[str, str]:
         """
         Validate complete request input
 
         Args:
             github_username: GitHub username
             job_description: Job description
-            linkedin_url: LinkedIn profile URL (optional)
 
         Returns:
-            Tuple of (github_username, job_description, linkedin_url)
+            Tuple of (github_username, job_description)
 
         Raises:
             InvalidGitHubUsername: If username is invalid
             InvalidJobDescription: If job description is invalid
-            ValueError: If LinkedIn URL is invalid
         """
         github_username = cls.validate_github_username(github_username)
         job_description = cls.validate_job_description(job_description)
-        linkedin_url = cls.validate_linkedin_url(linkedin_url)
 
-        return github_username, job_description, linkedin_url
+        return github_username, job_description
 
     @classmethod
     def is_valid_github_username(cls, username: str) -> bool:

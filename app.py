@@ -143,13 +143,7 @@ HTML_TEMPLATE = """
             </div>
             
             <div class="form-group">
-                <label for="linkedin">LinkedIn Profile URL (optional):</label>
-                <input type="text" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/username/">
-                <div class="example">Example: https://www.linkedin.com/in/satyanadella/</div>
-            </div>
-
-            <div class="form-group">
-                <label for="linkedinFile">OR Upload LinkedIn Data (ZIP):</label>
+                <label for="linkedinFile">Upload LinkedIn Data (ZIP):</label>
                 <input type="file" id="linkedinFile" name="linkedinFile" accept=".zip">
                 <div class="example">Settings > Data Privacy > Get a copy of your data > Download ZIP</div>
             </div>
@@ -174,13 +168,12 @@ HTML_TEMPLATE = """
             const status = document.getElementById('status');
 
             const github = document.getElementById('github').value;
-            const linkedin = document.getElementById('linkedin').value;
             const linkedinFile = document.getElementById('linkedinFile').files[0];
             const jobDescription = document.getElementById('jobDescription').value;
 
-            if (!github && !linkedin && !linkedinFile) {
+            if (!github && !linkedinFile) {
                 status.className = 'status error';
-                status.textContent = 'Please provide at least one profile (GitHub, LinkedIn URL, or Data Export)';
+                status.textContent = 'Please provide at least one profile (GitHub username or LinkedIn Data Export)';
                 return;
             }
 
@@ -200,7 +193,6 @@ HTML_TEMPLATE = """
                 if (linkedinFile) {
                     const formData = new FormData();
                     formData.append('github_username', github);
-                    formData.append('linkedin_url', linkedin);
                     formData.append('job_description', jobDescription);
                     formData.append('linkedin_data', linkedinFile);
 
@@ -216,7 +208,6 @@ HTML_TEMPLATE = """
                         },
                         body: JSON.stringify({
                             github_username: github,
-                            linkedin_url: linkedin,
                             job_description: jobDescription
                         })
                     });
@@ -265,26 +256,24 @@ def generate_resume():
     Main endpoint to generate a tailored resume
 
     Expected payload:
-    - JSON: {"github_username": "...", "linkedin_url": "...", "job_description": "..."}
-    - OR Multipart: form fields github_username, linkedin_url, job_description AND optional file linkedin_data
+    - JSON: {"github_username": "...", "job_description": "..."}
+    - OR Multipart: form fields github_username, job_description AND optional file linkedin_data
     """
     try:
         linkedin_file = None
         if request.content_type and "multipart/form-data" in request.content_type:
             github_username = request.form.get("github_username", "").strip()
-            linkedin_url = request.form.get("linkedin_url", "").strip()
             job_description = request.form.get("job_description", "").strip()
             linkedin_file = request.files.get("linkedin_data")
         else:
             data = request.json
             github_username = data.get("github_username", "").strip()
-            linkedin_url = data.get("linkedin_url", "").strip()
             job_description = data.get("job_description", "").strip()
 
         if not job_description:
             return jsonify({"error": "Job description is required"}), 400
 
-        if not github_username and not linkedin_url and not linkedin_file:
+        if not github_username and not linkedin_file:
             return (
                 jsonify({"error": "At least one profile or data export is required"}),
                 400,
@@ -312,9 +301,6 @@ def generate_resume():
             # Cleanup
             if os.path.exists(file_path):
                 os.remove(file_path)
-        elif linkedin_url:
-            linkedin_data = linkedin_scraper.scrape_profile(linkedin_url)
-            profile_data["linkedin"] = linkedin_data
 
         # Step 2: Analyze job description
         job_requirements = job_analyzer.analyze(job_description)
