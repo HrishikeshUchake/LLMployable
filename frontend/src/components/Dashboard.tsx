@@ -1,14 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useOptimistic, Activity } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { FileText, Briefcase, Calendar, Download, Loader2, AlertCircle, Trash2, History, ExternalLink, Eye, X } from 'lucide-react';
+import { 
+  FileText, Briefcase, Calendar, Download, Loader2, 
+  AlertCircle, Trash2, History, ExternalLink, Eye, X,
+  Plus, Search, Filter, TrendingUp, Clock, ChevronRight,
+  Github
+} from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 interface Resume {
   id: string;
   job_title: string;
+  job_description: string;
   github_username: string;
   created_at: string;
   is_archived: boolean;
@@ -20,7 +27,14 @@ interface Application {
   company: string;
   status: string;
   applied_date: string;
+  job_description: string;
 }
+
+type JobDetailView = {
+  job_title: string;
+  job_description: string;
+  company?: string;
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -31,6 +45,14 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'resumes' | 'applications'>('resumes');
   const [previewResumeId, setPreviewResumeId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [viewingJobDetails, setViewingJobDetails] = useState<JobDetailView | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // useOptimistic for immediate UI updates when archiving/deleting
+  const [optimisticResumes, removeOptimisticResume] = useOptimistic(
+    resumes,
+    (state, resumeId: string) => state.filter(r => r.id !== resumeId)
+  );
 
   const handleDownload = async (resumeId: string, jobTitle: string) => {
     try {
@@ -49,7 +71,6 @@ export default function Dashboard() {
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
       console.error('Download error:', err);
-      alert('Failed to download resume. Please try again.');
     }
   };
 
@@ -65,7 +86,6 @@ export default function Dashboard() {
         setPreviewUrl(url);
     } catch (err: any) {
         console.error('Preview error:', err);
-        alert('Failed to load preview. Please try again.');
         setPreviewResumeId(null);
     }
   };
@@ -92,7 +112,7 @@ export default function Dashboard() {
         setResumes(resumesRes.data);
         setApplications(appsRes.data);
       } catch (err: any) {
-        setError('Failed to load dashboard data. Please try again later.');
+        setError('Failed to load your career data. Please check your connection.');
         console.error('Dashboard fetch error:', err);
       } finally {
         setLoading(false);
@@ -104,192 +124,323 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
-        <p className="text-slate-400 animate-pulse">Loading your career overview...</p>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6">
+        <motion.div
+            animate={{ 
+                scale: [1, 1.2, 1],
+                rotate: [0, 180, 360]
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center"
+        >
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </motion.div>
+        <div className="text-center">
+            <h2 className="text-xl font-bold">Assembling your workspace</h2>
+            <p className="text-muted-foreground mt-1">This will only take a moment...</p>
+        </div>
       </div>
     );
   }
 
+  const filteredResumes = optimisticResumes.filter(r => 
+    (r.job_title || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <header className="mb-12">
-        <h1 className="text-4xl font-bold text-white mb-2">Welcome, {user?.username}</h1>
-        <p className="text-slate-400 text-lg">Manage your tailored resumes and track your job applications</p>
-      </header>
+    <div className="max-w-7xl mx-auto py-8">
+      {/* Welcome Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight mb-2">
+            Workspace<span className="text-primary">.</span>
+          </h1>
+          <p className="text-muted-foreground text-lg flex items-center gap-2">
+            Welcome back, <span className="text-foreground font-bold">{user?.username}</span>
+          </p>
+        </div>
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-bold shadow-xl shadow-primary/20 transition-smooth"
+        >
+          <Plus className="w-5 h-5" />
+          Create New Resume
+        </Link>
+      </div>
 
       {error && (
-        <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-8 p-4 bg-danger/10 border border-danger/20 rounded-2xl flex items-center gap-3 text-danger font-medium"
+        >
+          <AlertCircle className="w-5 h-5" />
           <p>{error}</p>
-        </div>
+        </motion.div>
       )}
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-          <div className="flex items-center gap-4 mb-2 text-indigo-400">
-            <FileText className="w-5 h-5" />
-            <span className="font-semibold uppercase text-xs tracking-wider">Total Resumes</span>
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-md transition-smooth">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-primary/10 p-2.5 rounded-xl">
+                <FileText className="w-5 h-5 text-primary" />
+            </div>
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Resumes</span>
           </div>
-          <p className="text-3xl font-bold text-white">{resumes.length}</p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-          <div className="flex items-center gap-4 mb-2 text-emerald-400">
-            <Briefcase className="w-5 h-5" />
-            <span className="font-semibold uppercase text-xs tracking-wider">Applications</span>
+          <div className="flex items-end justify-between">
+            <p className="text-4xl font-black">{resumes.length}</p>
+            <TrendingUp className="w-5 h-5 text-primary mb-1" />
           </div>
-          <p className="text-3xl font-bold text-white">{applications.length}</p>
         </div>
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-slate-500 flex flex-col justify-center">
-            <p className="text-sm">Keep applying to increase your chances!</p>
+        
+        <div className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-md transition-smooth">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-success/10 p-2.5 rounded-xl">
+                <Briefcase className="w-5 h-5 text-success" />
+            </div>
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Applications</span>
+          </div>
+          <div className="flex items-end justify-between">
+            <p className="text-4xl font-black">{applications.length}</p>
+            <div className="bg-success text-white text-[10px] font-black px-2 py-0.5 rounded-full mb-1">LIVE</div>
+          </div>
+        </div>
+
+        <div className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-md transition-smooth md:col-span-2 bg-gradient-to-br from-primary/5 to-transparent flex items-center justify-between overflow-hidden relative">
+            <div className="relative z-10">
+                <h3 className="font-bold text-foreground mb-1">Career Insights</h3>
+                <p className="text-sm text-muted-foreground max-w-[200px]">You've generated {resumes.length} tailored resumes this month. Keep up the momentum!</p>
+            </div>
+            <Clock className="w-24 h-24 text-primary/10 absolute -right-4 -bottom-4 rotate-12" />
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-8">
-        <button
-          onClick={() => setActiveTab('resumes')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
-            activeTab === 'resumes' 
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <FileText className="w-5 h-5" />
-          Resumes
-        </button>
-        <button
-          onClick={() => setActiveTab('applications')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
-            activeTab === 'applications' 
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
-              : 'text-slate-400 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          <Briefcase className="w-5 h-5" />
-          Applications
-        </button>
+      {/* Control Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div className="flex bg-muted p-1.5 rounded-2xl w-full sm:w-auto">
+          <button
+            onClick={() => setActiveTab('resumes')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-smooth ${
+              activeTab === 'resumes' 
+                ? 'bg-card text-foreground shadow-sm px-8' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            My Resumes
+          </button>
+          <button
+            onClick={() => setActiveTab('applications')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-smooth ${
+              activeTab === 'applications' 
+                ? 'bg-card text-foreground shadow-sm px-8' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Briefcase className="w-4 h-4" />
+            Applications
+          </button>
+        </div>
+
+        <div className="relative w-full sm:w-72 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <input 
+                type="text" 
+                placeholder={`Search ${activeTab}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 bg-muted border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-smooth"
+            />
+        </div>
       </div>
 
-      {/* Content */}
-      <motion.div
-        key={activeTab}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
-        {activeTab === 'resumes' ? (
-          resumes.length > 0 ? (
-            resumes.map(resume => (
-              <div key={resume.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/50 transition-all group">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="bg-indigo-500/10 p-3 rounded-xl text-indigo-400">
-                    <History className="w-6 h-6" />
+      {/* Content Area with React 19.2 <Activity> */}
+      <div className="relative min-h-[400px]">
+        {/* Resumes Tab */}
+        <Activity mode={activeTab === 'resumes' ? 'visible' : 'hidden'}>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {filteredResumes.length > 0 ? (
+              filteredResumes.map(resume => (
+                <motion.div 
+                  key={resume.id} 
+                  layout
+                  className="group bg-card border border-white/10 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-smooth overflow-hidden relative"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+                    <History className="w-12 h-12 text-primary -rotate-12" />
                   </div>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                    {new Date(resume.created_at).toLocaleDateString()}
-                  </span>
+
+                  <div className="flex justify-between items-start mb-6">
+                    <button 
+                      onClick={() => setViewingJobDetails(resume)}
+                      className="p-3.5 bg-muted rounded-2xl text-primary group-hover:bg-primary group-hover:text-white transition-smooth shadow-inner cursor-pointer hover:scale-105"
+                      title="View Job Details"
+                    >
+                      <FileText className="w-6 h-6" />
+                    </button>
+                    <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest bg-muted/50 px-2 py-1 rounded-md">
+                      {new Date(resume.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-black mb-2 leading-tight group-hover:text-primary transition-colors">
+                    {resume.job_title || 'Tailored Resume'}
+                  </h3>
+                  
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold mb-8">
+                    <Github className="w-3.5 h-3.5 text-foreground" />
+                    <span>{resume.github_username}</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => handlePreview(resume.id)}
+                      className="bg-primary hover:bg-primary-dark text-white py-3 rounded-2xl text-sm font-black transition-smooth flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                    >
+                      {previewResumeId === resume.id && !previewUrl ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                          <Eye className="w-4 h-4" />
+                      )}
+                      Preview
+                    </button>
+                    <div className="flex gap-2">
+                       <button 
+                        onClick={() => handleDownload(resume.id, resume.job_title)}
+                        className="flex-1 bg-muted hover:bg-slate-200 text-foreground py-3 rounded-2xl transition-smooth flex items-center justify-center border border-transparent hover:border-white/20"
+                        title="Download PDF"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button 
+                        className="flex-1 bg-danger/5 hover:bg-danger text-danger hover:text-white p-3 rounded-2xl transition-smooth border border-danger/10"
+                        onClick={() => removeOptimisticResume(resume.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full py-32 text-center rounded-[3rem] border-2 border-dashed border-muted flex flex-col items-center">
+                <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mb-6">
+                    <FileText className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">
-                  {resume.job_title || 'Tailored Resume'}
-                </h3>
-                <p className="text-slate-500 text-sm mb-6 flex items-center gap-2">
-                  <ExternalLink className="w-3 h-3" />
-                  GitHub: {resume.github_username}
+                <h3 className="text-2xl font-black">Ready to launch?</h3>
+                <p className="text-muted-foreground mt-2 max-w-sm font-medium">
+                  {searchQuery ? `No resumes matching "${searchQuery}"` : "You haven't generated any tailored resumes yet. Let's build something great."}
                 </p>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => handlePreview(resume.id)}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    {previewResumeId === resume.id && !previewUrl ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                        <Eye className="w-4 h-4" />
-                    )}
-                    Preview
-                  </button>
-                  <button 
-                    onClick={() => handleDownload(resume.id, resume.job_title)}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700"
-                    title="Download PDF"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 border border-slate-800 hover:border-red-500/50 text-slate-500 hover:text-red-500 rounded-lg transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {!searchQuery && (
+                  <Link to="/" className="mt-8 text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all">
+                    Generate now <ChevronRight className="w-4 h-4" />
+                  </Link>
+                )}
               </div>
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl">
-              <FileText className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-400">No resumes yet</h3>
-              <p className="text-slate-600 mt-2">Generate your first tailored resume using the home page!</p>
-            </div>
-          )
-        ) : (
-          applications.length > 0 ? (
-            applications.map(app => (
-              <div key={app.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="bg-emerald-500/10 p-3 rounded-xl text-emerald-400">
-                    <Briefcase className="w-6 h-6" />
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${
-                    app.status === 'Applied' ? 'bg-indigo-500/10 text-indigo-400' :
-                    app.status === 'Interviewing' ? 'bg-amber-500/10 text-amber-400' :
-                    'bg-emerald-500/10 text-emerald-400'
-                  }`}>
-                    {app.status}
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-white mb-1">{app.job_title}</h3>
-                <p className="text-indigo-400 text-sm mb-4 font-medium">{app.company}</p>
-                <div className="flex items-center gap-2 text-slate-500 text-sm">
-                  <Calendar className="w-4 h-4" />
-                  Applied on {new Date(app.applied_date).toLocaleDateString()}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl">
-              <Briefcase className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-400">No applications tracked</h3>
-              <p className="text-slate-600 mt-2">Keep track of your job search progress here.</p>
-            </div>
-          )
-        )}
-      </motion.div>
+            )}
+          </motion.div>
+        </Activity>
 
-      {/* Preview Modal */}
+        {/* Applications Tab */}
+        <Activity mode={activeTab === 'applications' ? 'visible' : 'hidden'}>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {applications.length > 0 ? (
+              applications.map(app => (
+                <div key={app.id} className="bg-card border border-white/10 rounded-[2rem] p-8 shadow-sm hover:shadow-xl transition-smooth relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-6">
+                    <button 
+                      onClick={() => setViewingJobDetails({ job_title: app.job_title, job_description: app.job_description, company: app.company })}
+                      className="p-3.5 bg-success/10 rounded-2xl text-success shadow-inner hover:bg-success hover:text-white transition-smooth"
+                    >
+                      <Briefcase className="w-6 h-6" />
+                    </button>
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                      app.status === 'Applied' ? 'bg-primary/10 text-primary' :
+                      app.status === 'Interviewing' ? 'bg-warning/10 text-warning' :
+                      'bg-success/10 text-success'
+                    }`}>
+                      {app.status}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black mb-1 group-hover:text-primary transition-colors">{app.job_title}</h3>
+                  <p className="text-primary font-bold text-sm mb-6">{app.company}</p>
+                  
+                  <div className="flex items-center justify-between border-t border-muted pt-6 mt-2">
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {new Date(app.applied_date).toLocaleDateString()}
+                    </div>
+                    <button 
+                      onClick={() => setViewingJobDetails({ job_title: app.job_title, job_description: app.job_description, company: app.company })}
+                      className="text-xs font-black text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group/btn"
+                    >
+                        Details <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full py-32 text-center rounded-[3rem] border-2 border-dashed border-muted flex flex-col items-center">
+                <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mb-6">
+                    <Briefcase className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <h3 className="text-2xl font-black">Track your journey</h3>
+                <p className="text-muted-foreground mt-2 max-w-sm font-medium">Keep track of every application and increase your chances of success.</p>
+              </div>
+            )}
+          </motion.div>
+        </Activity>
+      </div>
+
+      {/* Modern Preview Modal */}
       <AnimatePresence>
         {previewUrl && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-foreground/90 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative w-full max-w-5xl h-[90vh] bg-slate-900 rounded-2xl overflow-hidden flex flex-col pt-12"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-6xl h-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl border border-white/10"
             >
-              <button 
-                onClick={closePreview}
-                className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-colors z-10"
-              >
-                <X className="w-6 h-6" />
-              </button>
-              
-              <div className="flex-1 w-full bg-white">
-                <iframe 
-                  src={previewUrl} 
-                  className="w-full h-full border-none"
-                  title="Resume Preview"
-                />
+              <div className="bg-card w-full px-8 py-4 border-b border-muted flex items-center justify-between">
+                <div>
+                    <h2 className="text-lg font-black flex items-center gap-2 text-foreground">
+                        <FileText className="w-5 h-5 text-primary" />
+                        Live Preview
+                    </h2>
+                </div>
+                <button 
+                    onClick={closePreview}
+                    className="p-2.5 bg-muted hover:bg-slate-200 text-foreground rounded-xl transition-smooth"
+                >
+                    <X className="w-5 h-5" />
+                </button>
               </div>
               
-              <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
+              <div className="flex-1 w-full bg-slate-100/50 p-4 sm:p-8 overflow-auto flex justify-center">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-4xl h-full bg-white shadow-2xl rounded-lg overflow-hidden"
+                >
+                    <iframe 
+                    src={previewUrl} 
+                    className="w-full h-full border-none"
+                    title="Resume Preview"
+                    />
+                </motion.div>
+              </div>
+              
+              <div className="p-6 bg-card border-t border-muted flex flex-col sm:flex-row justify-center items-center gap-4">
                 <button 
                     onClick={() => {
                         const link = document.createElement('a');
@@ -297,16 +448,69 @@ export default function Dashboard() {
                         link.setAttribute('download', 'tailored_resume.pdf');
                         link.click();
                     }}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-medium transition-all"
+                    className="w-full sm:w-auto flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-white px-10 py-3.5 rounded-2xl font-black shadow-xl shadow-primary/25 transition-smooth"
                 >
-                    <Download className="w-4 h-4" />
-                    Download PDF
+                    <Download className="w-5 h-5" />
+                    Download PDF Document
                 </button>
                 <button 
                     onClick={closePreview}
-                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-all"
+                    className="w-full sm:w-auto px-10 py-3.5 bg-muted hover:bg-slate-200 text-foreground rounded-2xl font-bold transition-smooth"
                 >
-                    Close
+                    Dismiss
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Job Details Modal */}
+      <AnimatePresence>
+        {viewingJobDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-foreground/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl border border-white/10"
+            >
+              <div className="bg-card w-full px-8 py-6 border-b border-muted flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black flex items-center gap-2 text-foreground">
+                    <Briefcase className="w-6 h-6 text-primary" />
+                    Job Details
+                  </h2>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">
+                    {viewingJobDetails.company ? `Application for ${viewingJobDetails.company}` : `Uploaded for ${viewingJobDetails.job_title}`}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setViewingJobDetails(null)}
+                  className="p-2.5 bg-muted hover:bg-slate-200 text-foreground rounded-xl transition-smooth"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex-1 p-8 overflow-y-auto max-h-[60vh]">
+                <div className="prose prose-sm max-w-none">
+                  <h4 className="text-foreground font-bold mb-2 uppercase tracking-wider text-xs">Role Title</h4>
+                  <p className="text-lg font-bold mb-6">{viewingJobDetails.job_title}</p>
+                  
+                  <h4 className="text-foreground font-bold mb-2 uppercase tracking-wider text-xs">Original Job Description</h4>
+                  <div className="bg-muted/50 p-6 rounded-2xl text-muted-foreground whitespace-pre-wrap leading-relaxed text-sm border border-white/5">
+                    {viewingJobDetails.job_description || "No description provided."}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6 bg-card border-t border-muted flex justify-end">
+                <button 
+                  onClick={() => setViewingJobDetails(null)}
+                  className="px-8 py-3 bg-primary hover:bg-primary-dark text-white rounded-2xl font-bold transition-smooth shadow-lg shadow-primary/20"
+                >
+                  Close Details
                 </button>
               </div>
             </motion.div>

@@ -6,7 +6,7 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import Dashboard from './components/Dashboard';
 import { motion } from 'framer-motion';
-import { Rocket } from 'lucide-react';
+import { Rocket, Sparkles, Shield, Zap } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -15,31 +15,67 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function Home() {
   return (
-    <div className="max-w-4xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-16"
-      >
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="relative pt-10 pb-20 md:pt-16 md:pb-32 overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent -z-10 blur-3xl opacity-50 rounded-full" />
+        
         <motion.div 
-          whileHover={{ rotate: 15, scale: 1.1 }}
-          className="inline-flex items-center justify-center p-4 bg-indigo-600 rounded-3xl shadow-xl shadow-indigo-200 mb-6 cursor-pointer"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-16 relative"
         >
-          <Rocket className="w-10 h-10 text-white" />
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", damping: 12 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest mb-8 shadow-sm border border-primary/10"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Next-Gen Career Intelligence
+          </motion.div>
+          
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-foreground mb-6 leading-[0.9]">
+            Optimize<span className="text-primary">.</span><br />
+            Apply<span className="text-primary">.</span><br />
+            Succeed<span className="text-primary">.</span>
+          </h1>
+          
+          <p className="max-w-2xl mx-auto text-xl text-muted-foreground font-medium mb-10 leading-relaxed">
+            Mployable uses advanced AI to bridge the gap between your technical profile and your dream job. Tailored resumes that bypass ATS and impress recruiters.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-12 mt-16 opacity-50">
+            <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                <span className="text-sm font-bold uppercase tracking-tighter">ATS Optimized</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                <span className="text-sm font-bold uppercase tracking-tighter">Instant Generation</span>
+            </div>
+            <div className="flex items-center gap-2 text-primary opacity-100">
+                <Sparkles className="w-5 h-5" />
+                <span className="text-sm font-black uppercase tracking-tighter">Gemini 2.0 Powered</span>
+            </div>
+          </div>
         </motion.div>
-        <h1 className="text-5xl font-black tracking-tight text-slate-900 sm:text-6xl mb-4">
-          Mployable<span className="text-indigo-600">.</span>
-        </h1>
-        <p className="max-w-xl mx-auto text-xl text-slate-500 font-medium">
-          AI-powered resume tailoring that actually works. Leverage your GitHub & LinkedIn to match any job description.
+      </div>
+
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/5 -skew-y-3 -z-10 rounded-[4rem]" />
+        <div className="py-20">
+            <ResumeForm />
+        </div>
+      </div>
+      
+      <footer className="mt-32 pb-12 text-center">
+        <p className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center gap-4">
+          <span className="w-8 h-[1px] bg-border" />
+          The Future of Engineering Applications
+          <span className="w-8 h-[1px] bg-border" />
         </p>
-      </motion.div>
-      
-      <ResumeForm />
-      
-      <p className="mt-16 text-center text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-        Powered by <span className="text-slate-600">Google Gemini</span> &bull; Built for <span className="text-indigo-600">The Future of Work</span>
-      </p>
+      </footer>
     </div>
   );
 }
@@ -48,9 +84,9 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#fafafa] text-slate-900 selection:bg-indigo-100 selection:text-indigo-700">
+        <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors">
           <Navbar />
-          <main className="py-12 px-4 sm:px-6 lg:px-8">
+          <main className="relative">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginForm />} />

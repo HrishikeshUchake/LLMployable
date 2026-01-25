@@ -130,9 +130,36 @@ class LaTeXCompiler:
 
         contact_line = " $|$ ".join(contact_items)
 
+        # Decide how many experiences and projects to show to fit on one page
+        # Prioritize experience, then projects.
+        max_total_items = 6
+        num_exp = len(experience)
+        num_proj = len(projects)
+
+        # We want to show as many experiences as possible, up to a limit
+        display_exp_count = min(num_exp, 4) 
+        # The rest of the budget goes to projects
+        display_proj_count = max(1, min(num_proj, max_total_items - display_exp_count))
+        
+        # If we have very few experiences, we can show more projects
+        if display_exp_count + display_proj_count < max_total_items:
+            display_proj_count = min(num_proj, max_total_items - display_exp_count)
+
+        # Adjust bullets based on number of items
+        total_displayed = display_exp_count + display_proj_count
+        if total_displayed <= 4:
+            max_bullets_exp = 4
+            max_bullets_proj = 3
+        elif total_displayed <= 5:
+            max_bullets_exp = 3
+            max_bullets_proj = 2
+        else:
+            max_bullets_exp = 2
+            max_bullets_proj = 2
+
         # Build Experience items
         exp_latex = ""
-        for exp in experience[:3]:
+        for exp in experience[:display_exp_count]:
             role = sanitize_latex(exp.get("role", ""))
             company = sanitize_latex(exp.get("company", ""))
             date = sanitize_latex(exp.get("date", ""))
@@ -149,7 +176,7 @@ class LaTeXCompiler:
                     bullets = [b.strip() for b in desc.split(". ") if b.strip()]
 
             exp_latex += f"    \\resumeSubheading\n      {{{company}}}{{{date}}}\n      {{{role}}}{{}}\n      \\resumeItemListStart\n"
-            for bullet in bullets[:5]:
+            for bullet in bullets[:max_bullets_exp]:
                 exp_latex += f"        \\resumeItem{{{sanitize_latex(bullet)}}}\n"
             exp_latex += "      \\resumeItemListEnd\n\n"
 
@@ -167,7 +194,7 @@ class LaTeXCompiler:
 
         # Build Projects items
         proj_latex = ""
-        for proj in projects[:3]:
+        for proj in projects[:display_proj_count]:
             p_name = sanitize_latex(proj.get("name", "Project"))
             p_desc = sanitize_latex(proj.get("description", ""))
             p_tech = ", ".join(
@@ -180,23 +207,30 @@ class LaTeXCompiler:
             proj_latex += f"    \\resumeProjectHeading\n      {{{proj_title}}}{{}}\n      \\resumeItemListStart\n"
             # Split description into bullets if needed
             bullets = [b.strip() for b in p_desc.split("\n") if b.strip()]
-            for bullet in bullets[:3]:
+            for bullet in bullets[:max_bullets_proj]:
                 proj_latex += f"        \\resumeItem{{{sanitize_latex(bullet)}}}\n"
             proj_latex += "      \\resumeItemListEnd\n\n"
 
         # Build Skills
         skills_str = ", ".join([sanitize_latex(s) for s in skills[:30]])
 
-        # Build Certifications
-        cert_items = []
-        for cert in certifications[:5]:
-            cert_items.append(
-                f"\\resumeProjectHeading\n      {{\\textbf{{{sanitize_latex(cert)}}}}}{{}}"
-            )
-        cert_latex = "\n".join(cert_items)
+        # Build Certifications - more compact if many
+        cert_latex = ""
+        if certifications:
+            if len(certifications) > 3:
+                # Comma separated for space efficiency
+                certs_str = ", ".join([sanitize_latex(c) for c in certifications[:8]])
+                cert_latex = f"    \\item[] \\small{{ {certs_str} }}"
+            else:
+                cert_items = []
+                for cert in certifications[:3]:
+                    cert_items.append(
+                        f"    \\resumeProjectHeading\n      {{\\textbf{{{sanitize_latex(cert)}}}}}{{}}"
+                    )
+                cert_latex = "\n".join(cert_items)
 
         # Build Languages
-        lang_str = ", ".join([sanitize_latex(l) for l in languages])
+        lang_str = ", ".join([sanitize_latex(l) for l in languages[:5]])
 
         # Build sections conditionally
         exp_section = ""
@@ -301,17 +335,15 @@ class LaTeXCompiler:
 \\cvsection{{Summary}}
 \\small{{{summary}}}
 
+{edu_section}
+
 {exp_section}
 
 {proj_section}
 
-{edu_section}
-
-{skills_section}
-
 {cert_section}
 
-{lang_section}
+{skills_section}
 
 \\end{{document}}
 """
@@ -345,11 +377,13 @@ Contact Information:
 Professional Summary:
   {summary}
 
-Technical Skills:
-  {', '.join(skills[:15])}
-
-Professional Experience:
+Education:
 """
+        for edu in education:
+            text += f"  {edu.get('degree', '')}, {edu.get('school', '')} | {edu.get('date', '')}\n"
+            text += f"    {edu.get('details', '')}\n\n"
+
+        text += "Professional Experience:\n"
         for exp in experience[:5]:
             text += f"  {exp.get('role', '')} @ {exp.get('company', '')} | {exp.get('date', '')}\n"
             text += f"    {exp.get('description', '')}\n\n"
@@ -362,15 +396,9 @@ Professional Experience:
                 f"    Technologies: {', '.join(proj.get('technologies', [])[:5])}\n\n"
             )
 
-        text += "\nEducation:\n"
-        for edu in education:
-            text += f"  {edu.get('degree', '')}, {edu.get('school', '')} | {edu.get('date', '')}\n"
-            text += f"    {edu.get('details', '')}\n\n"
-
         if certifications:
             text += f"\nCertifications: {', '.join(certifications)}\n"
 
-        if languages:
-            text += f"Languages: {', '.join(languages)}\n"
+        text += f"\nTechnical Skills:\n  {', '.join(skills[:15])}\n"
 
         return text

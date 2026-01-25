@@ -176,14 +176,15 @@ REQUIRED SKILLS FROM JOB:
 {json.dumps(job_requirements.get('skills', {}), indent=2)}
 
 TASK:
-Generate a detailed, tailored resume that fits perfectly on a single page. Follow these guidelines:
+Generate a detailed, tailored resume that MUST fit on a single page. Follow these guidelines:
 1. Highlights relevant skills that match the job requirements.
 2. Incorporates both professional experience from LinkedIn and technical projects from GitHub.
-3. Uses strong action words and quantifiable achievements (e.g., "Increased efficiency by 20%", "Managed a team of 5").
-4. Provide a compelling professional summary (3-4 sentences) that highlights your unique value proposition.
-5. Provide 2-3 detailed bullet points for each significant work experience, focusing on achievements and technologies used.
-6. Provide a descriptive paragraph or 2-3 bullet points for each project, explaining the problem solved and the technical implementation.
-7. Ensure the layout is dense and professional to avoid empty space while strictly remaining on one page.
+3. PRIORITIZE professional experience over projects. If space is limited, include more work experience items and fewer project items.
+4. Uses strong action words and quantifiable achievements (e.g., "Increased efficiency by 20%", "Managed a team of 5").
+5. Provide a concise professional summary (max 2-3 sentences) that highlights your unique value proposition.
+6. Provide exactly 2-3 concise bullet points for each work experience.
+7. Provide exactly 1-2 concise bullet points for each project.
+8. Ensure the layout is dense and professional to avoid empty space while strictly remaining on one page.
 
 Return the response in the following JSON format:
 {{
@@ -212,8 +213,7 @@ Return the response in the following JSON format:
             "technologies": ["tech1", "tech2"]
         }}
     ],
-    "certifications": ["Cert 1", "Cert 2"],
-    "languages": ["Lang 1", "Lang 2"]
+    "certifications": ["Cert 1", "Cert 2"]
 }}
 
 Only return valid JSON, no additional text."""
@@ -362,9 +362,8 @@ Only return valid JSON, no additional text."""
             "summary": linkedin_data.get("summary")
             or github_data.get("bio", "Experienced software developer"),
             "skills": final_skills,
-            "experience": experience[:3],
-            "projects": projects[:3],
+            "experience": experience[:6], # Let the compiler handle scaling
+            "projects": projects[:6],    # Let the compiler handle scaling
             "education": education[:2],
-            "certifications": certifications[:5],
-            "languages": languages[:5]
+            "certifications": certifications[:10]
         }
