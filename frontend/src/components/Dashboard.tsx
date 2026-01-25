@@ -1,10 +1,10 @@
-import { useState, useEffect, useOptimistic, Activity } from 'react';
+import { useState, useEffect, useOptimistic } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   FileText, Briefcase, Calendar, Download, Loader2, 
   AlertCircle, Trash2, History, Eye, X,
   Plus, Search, TrendingUp, Clock, ChevronRight,
-  Github
+  Github, Sparkles
 } from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -151,21 +151,31 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto py-8">
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight mb-2">
-            Workspace<span className="text-primary">.</span>
-          </h1>
-          <p className="text-muted-foreground text-lg flex items-center gap-2">
-            Welcome back, <span className="text-foreground font-bold">{user?.username}</span>
-          </p>
-        </div>
-        <Link 
-          to="/" 
-          className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-bold shadow-xl shadow-primary/20 transition-smooth"
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
         >
-          <Plus className="w-5 h-5" />
-          Create New Resume
-        </Link>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-black tracking-tight">
+              Workspace<span className="text-primary">.</span>
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-lg flex items-center gap-2">
+            Welcome back, <span className="text-foreground font-black underline decoration-primary/30 decoration-4 underline-offset-4">{user?.username}</span>
+          </p>
+        </motion.div>
+        <motion.div
+           initial={{ opacity: 0, x: 20 }}
+           animate={{ opacity: 1, x: 0 }}
+        >
+          <Link 
+            to="/" 
+            className="group inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-primary/20 transition-smooth hover:-translate-y-1 active:translate-y-0"
+          >
+            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+            Create New Resume
+          </Link>
+        </motion.div>
       </div>
 
       {error && (
@@ -181,49 +191,68 @@ export default function Dashboard() {
 
       {/* Stats Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <div className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-md transition-smooth">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-xl transition-smooth group"
+        >
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-primary/10 p-2.5 rounded-xl">
+            <div className="bg-primary/10 p-2.5 rounded-xl group-hover:scale-110 transition-transform">
                 <FileText className="w-5 h-5 text-primary" />
             </div>
             <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Resumes</span>
           </div>
           <div className="flex items-end justify-between">
-            <p className="text-4xl font-black">{resumes.length}</p>
-            <TrendingUp className="w-5 h-5 text-primary mb-1" />
+            <p className="text-4xl font-black tabular-nums">{resumes.length}</p>
+            <TrendingUp className="w-5 h-5 text-primary mb-1 animate-pulse" />
           </div>
-        </div>
+        </motion.div>
         
-        <div className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-md transition-smooth">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-xl transition-smooth group"
+        >
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-success/10 p-2.5 rounded-xl">
+            <div className="bg-success/10 p-2.5 rounded-xl group-hover:scale-110 transition-transform">
                 <Briefcase className="w-5 h-5 text-success" />
             </div>
             <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Applications</span>
           </div>
           <div className="flex items-end justify-between">
-            <p className="text-4xl font-black">{applications.length}</p>
-            <div className="bg-success text-white text-[10px] font-black px-2 py-0.5 rounded-full mb-1">LIVE</div>
+            <p className="text-4xl font-black tabular-nums">{applications.length}</p>
+            <div className="bg-success text-white text-[10px] font-black px-2 py-0.5 rounded-full mb-1 shadow-sm shadow-success/20">LIVE</div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-md transition-smooth md:col-span-2 bg-gradient-to-br from-primary/5 to-transparent flex items-center justify-between overflow-hidden relative">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="glass p-6 rounded-3xl border border-white/5 shadow-sm hover:shadow-xl transition-smooth md:col-span-2 bg-gradient-to-br from-primary/10 via-background to-transparent flex items-center justify-between overflow-hidden relative group"
+        >
             <div className="relative z-10">
-                <h3 className="font-bold text-foreground mb-1">Career Insights</h3>
-                <p className="text-sm text-muted-foreground max-w-[200px]">You've generated {resumes.length} tailored resumes this month. Keep up the momentum!</p>
+                <h3 className="font-black text-foreground mb-1 flex items-center gap-2">
+                    Career Insights
+                    <Sparkles className="w-4 h-4 text-primary" />
+                </h3>
+                <p className="text-sm font-medium text-muted-foreground max-w-[280px]">You've generated <span className="text-primary font-black">{resumes.length} optimized resumes</span>. Your profile matching score is increasing!</p>
             </div>
-            <Clock className="w-24 h-24 text-primary/10 absolute -right-4 -bottom-4 rotate-12" />
-        </div>
+            <Clock className="w-24 h-24 text-primary/10 absolute -right-4 -bottom-4 rotate-12 group-hover:scale-125 transition-transform duration-500" />
+            <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
+        </motion.div>
       </div>
 
       {/* Control Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-        <div className="flex bg-muted p-1.5 rounded-2xl w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-12 bg-muted/30 p-4 rounded-[2rem] border border-white/5">
+        <div className="flex bg-background/50 backdrop-blur-sm p-1.5 rounded-2xl w-full sm:w-auto shadow-inner">
           <button
             onClick={() => setActiveTab('resumes')}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-smooth ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-black text-sm transition-smooth ${
               activeTab === 'resumes' 
-                ? 'bg-card text-foreground shadow-sm px-8' 
+                ? 'bg-card text-primary shadow-lg shadow-black/5 ring-1 ring-black/5' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -232,9 +261,9 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveTab('applications')}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-smooth ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-black text-sm transition-smooth ${
               activeTab === 'applications' 
-                ? 'bg-card text-foreground shadow-sm px-8' 
+                ? 'bg-card text-primary shadow-lg shadow-black/5 ring-1 ring-black/5' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -243,27 +272,37 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="relative w-full sm:w-72 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <div className="relative w-full sm:w-96 group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input 
                 type="text" 
-                placeholder={`Search ${activeTab}...`}
+                placeholder={`Search ${activeTab === 'resumes' ? 'resumes by job title' : 'applications'}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-muted border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-smooth"
+                className="w-full pl-12 pr-6 py-3.5 bg-card border-none rounded-2xl text-sm font-bold shadow-sm focus:ring-4 focus:ring-primary/10 transition-smooth placeholder:text-muted-foreground/40"
             />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-md transition-colors"
+              >
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
         </div>
       </div>
 
-      {/* Content Area with React 19.2 <Activity> */}
+      {/* Content Area */}
       <div className="relative min-h-[400px]">
-        {/* Resumes Tab */}
-        <Activity mode={activeTab === 'resumes' ? 'visible' : 'hidden'}>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
+        <AnimatePresence mode="wait">
+          {activeTab === 'resumes' ? (
+            <motion.div
+              key="resumes-tab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
             {filteredResumes.length > 0 ? (
               filteredResumes.map(resume => (
                 <motion.div 
@@ -344,13 +383,12 @@ export default function Dashboard() {
               </div>
             )}
           </motion.div>
-        </Activity>
-
-        {/* Applications Tab */}
-        <Activity mode={activeTab === 'applications' ? 'visible' : 'hidden'}>
+        ) : (
           <motion.div
+            key="applications-tab"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {applications.length > 0 ? (
@@ -398,7 +436,8 @@ export default function Dashboard() {
               </div>
             )}
           </motion.div>
-        </Activity>
+        )}
+        </AnimatePresence>
       </div>
 
       {/* Modern Preview Modal */}

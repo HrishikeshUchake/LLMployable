@@ -57,7 +57,7 @@ function Home() {
             </div>
             <div className="flex items-center gap-2 text-primary opacity-100">
                 <Sparkles className="w-5 h-5" />
-                <span className="text-sm font-black uppercase tracking-tighter">Gemini 2.0 Powered</span>
+                <span className="text-sm font-black uppercase tracking-tighter">Gemini Powered</span>
             </div>
           </div>
         </motion.div>

@@ -1,6 +1,6 @@
 import { useState, useActionState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Github, Linkedin, Briefcase, Download, Loader2, Rocket, AlertCircle, CheckCircle2, Info, ArrowRight, ShieldCheck, Mic, Sparkles } from 'lucide-react';
+import { Github, Linkedin, Briefcase, Download, Loader2, AlertCircle, CheckCircle2, Info, ArrowRight, ShieldCheck, Mic, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -146,87 +146,115 @@ export default function ResumeForm() {
         >
           <div className="bg-card rounded-[3rem] shadow-2xl shadow-primary/5 border border-white/10 overflow-hidden">
             <div className="p-8 sm:p-12">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="p-3 bg-primary/10 rounded-2xl text-primary">
-                    <Rocket className="w-6 h-6" />
+              <div className="flex items-center gap-5 mb-12">
+                <div className="p-4 bg-primary/10 rounded-2xl text-primary shadow-inner">
+                    <Sparkles className="w-8 h-8" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-black">Generator Configuration</h2>
-                    <p className="text-muted-foreground font-medium text-sm">Fill in your details to start the magic</p>
+                    <h2 className="text-3xl font-black text-foreground tracking-tight">Generator<span className="text-primary">.</span></h2>
+                    <p className="text-muted-foreground font-medium flex items-center gap-2 text-sm">
+                        Configure your AI agent for optimal results
+                        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                    </p>
                 </div>
               </div>
 
               <form action={formAction} className="space-y-10">
                 {user?.id && <input type="hidden" name="user_id" value={user.id} />}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label htmlFor="github_username" className="text-sm font-black text-foreground flex items-center gap-2 uppercase tracking-widest">
-                      <Github className="w-4 h-4 text-primary" /> GitHub Profile
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                  <div className="space-y-4">
+                    <label htmlFor="github_username" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 flex items-center gap-2">
+                      <Github className="w-3.5 h-3.5" /> Technical Background
                     </label>
                     <div className="relative group">
                         <input
                         type="text"
                         name="github_username"
                         id="github_username"
-                        placeholder="e.g. torvalds"
-                        className="w-full pl-6 pr-6 py-5 rounded-2xl bg-muted border-none focus:ring-4 focus:ring-primary/10 focus:bg-card transition-smooth outline-none font-bold text-lg placeholder:text-muted-foreground/50"
+                        placeholder="GitHub Username"
+                        className="w-full px-8 py-5 rounded-2xl bg-muted/50 border-none focus:ring-4 focus:ring-primary/10 focus:bg-white transition-smooth outline-none font-black text-lg placeholder:text-muted-foreground/30 shadow-inner"
                         />
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-sm font-black text-foreground flex items-center gap-2 uppercase tracking-widest">
-                      <Linkedin className="w-4 h-4 text-primary" /> LinkedIn Export
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 flex items-center gap-2">
+                      <Linkedin className="w-3.5 h-3.5" /> Experience Profile
                     </label>
                     <div className="relative group overflow-hidden">
                       <input
                         type="file"
                         name="linkedin_data"
-                        accept=".zip"
+                        accept=".zip,.json"
                         onChange={(e) => setFileName(e.target.files?.[0]?.name || '')}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
-                      <div className="w-full px-6 py-5 rounded-2xl bg-muted border-none group-hover:bg-slate-200 transition-smooth flex items-center justify-between border-2 border-transparent group-focus-within:border-primary/20">
-                        <span className={`text-lg font-bold truncate ${fileName ? 'text-primary' : 'text-muted-foreground/50'}`}>
-                          {fileName || 'Upload Archive (.zip)'}
+                      <div className="w-full px-8 py-5 rounded-2xl bg-muted/50 border-2 border-dashed border-muted-foreground/20 group-hover:bg-muted group-hover:border-primary/50 transition-smooth flex items-center justify-between shadow-inner">
+                        <span className={`text-lg font-black truncate ${fileName ? 'text-primary' : 'text-muted-foreground/30'}`}>
+                          {fileName || 'Upload Archive'}
                         </span>
-                        <Download className="w-5 h-5 text-muted-foreground" />
+                        <div className="p-2 bg-background rounded-xl shadow-sm">
+                            <Download className="w-5 h-5 text-muted-foreground" />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label htmlFor="job_description" className="text-sm font-black text-foreground flex items-center gap-2 uppercase tracking-widest">
-                    <Briefcase className="w-4 h-4 text-primary" /> Target Job Description
-                  </label>
-                  <textarea
-                    name="job_description"
-                    id="job_description"
-                    rows={10}
-                    placeholder="Describe the opportunity you're targeting..."
-                    className="w-full px-6 py-6 rounded-[2rem] bg-muted border-none focus:ring-4 focus:ring-primary/10 focus:bg-card transition-smooth outline-none font-medium text-lg resize-none placeholder:text-muted-foreground/50"
-                  />
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end mb-1">
+                    <label htmlFor="job_description" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 flex items-center gap-2">
+                      <Briefcase className="w-3.5 h-3.5" /> Objective Analysis
+                    </label>
+                    <div className="flex items-center gap-1 text-[10px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-0.5 rounded">
+                        Target Role Description
+                    </div>
+                  </div>
+                  <div className="relative group">
+                    <textarea
+                      name="job_description"
+                      id="job_description"
+                      rows={10}
+                      placeholder="Paste the target job description here. The more detailed, the better our AI can tailor your profile."
+                      className="w-full p-8 rounded-[2.5rem] bg-muted/50 border-none focus:ring-4 focus:ring-primary/10 focus:bg-background transition-smooth outline-none font-medium text-lg leading-relaxed placeholder:text-muted-foreground/30 shadow-inner resize-none text-foreground"
+                    />
+                  </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="w-full group relative flex items-center justify-center gap-4 py-6 px-8 rounded-2xl bg-foreground text-white font-black text-xl hover:bg-primary transition-smooth disabled:opacity-50 disabled:bg-muted shadow-2xl shadow-primary/10"
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                      Generating Excellence...
-                    </>
-                  ) : (
-                    <>
-                      Begin Transformation
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="w-full group bg-foreground hover:bg-primary disabled:opacity-50 text-white font-black py-6 rounded-[2rem] transition-smooth shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 overflow-hidden relative active:scale-[0.98]"
+                  >
+                    <AnimatePresence mode="wait">
+                      {isPending ? (
+                        <motion.div 
+                          key="loading"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="flex items-center gap-3"
+                        >
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          <span className="tracking-tight">Initializing LLM Core...</span>
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          key="idle"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="flex items-center gap-3"
+                        >
+                          <Briefcase className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                          <span className="text-xl font-black">Generate Performance Suite</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                </div>
               </form>
 
               <AnimatePresence>
@@ -379,7 +407,7 @@ export default function ResumeForm() {
                      }}
                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <Rocket className="w-16 h-16" />
+                    <Briefcase className="w-16 h-16" />
                   </motion.div>
                 </div>
               </div>

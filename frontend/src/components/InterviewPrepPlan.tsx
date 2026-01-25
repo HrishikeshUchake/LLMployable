@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Check, Copy, Lightbulb, CheckCircle2, Brain, MessageSquare, Rocket } from 'lucide-react';
+import { Trophy, Check, Copy, Lightbulb, CheckCircle2, Brain, MessageSquare, Briefcase } from 'lucide-react';
 import QuestionCard from './QuestionCard';
 
 interface InterviewPrepData {
@@ -150,7 +150,7 @@ ${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`
               <PrepSection 
                 title="Situational Awareness" 
                 subtitle="Scenario Based Challenges"
-                icon={<Rocket className="w-5 h-5 text-indigo-600" />} 
+                icon={<Briefcase className="w-5 h-5 text-indigo-600" />} 
                 questions={situationalQs}
               />
             )}
