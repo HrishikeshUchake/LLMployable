@@ -47,7 +47,7 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
 
     # CORS
-    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5000"]
+    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5000", "http://localhost:5173"]
 
     # API Rate Limiting
     RATE_LIMIT_ENABLED = True

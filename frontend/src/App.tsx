@@ -1,5 +1,5 @@
-import { useState, useActionState, useTransition } from 'react'
-import { Rocket, Github, Linkedin, Briefcase, Download, Loader2, AlertCircle, CheckCircle2, Info } from 'lucide-react'
+import { useState, useActionState, useTransition, useCallback, useRef, useEffect } from 'react'
+import { Rocket, Github, Linkedin, Briefcase, Download, Loader2, AlertCircle, CheckCircle2, Info, Lightbulb, MessageSquare, Brain, Trophy, ChevronRight, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 
@@ -10,6 +10,13 @@ interface ActionState {
   type: 'idle' | 'loading' | 'success' | 'error'
   message: string
   downloadUrl?: string
+  interviewPrep?: {
+    tips: string[];
+    technical_questions: { question: string; context: string }[];
+    behavioral_questions: { question: string; context: string }[];
+    situational_questions: { question: string; context: string }[];
+    winning_strategy: string;
+  }
 }
 
 async function generateResumeAction(prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -26,18 +33,20 @@ async function generateResumeAction(prevState: ActionState, formData: FormData):
   }
 
   try {
-    // Try v1 first, fallback to root API
+    // Stage 1: Generate Resume (Main task)
     let response;
     try {
       response = await axios.post(`${API_BASE_URL}/api/v1/generate-resume`, formData, {
         responseType: 'blob',
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000 // 60s timeout
       })
     } catch (e: any) {
       if (e.response?.status === 404) {
         response = await axios.post(`${API_BASE_URL}/api/generate-resume`, formData, {
           responseType: 'blob',
           headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 60000
         })
       } else {
         throw e;
@@ -54,11 +63,41 @@ async function generateResumeAction(prevState: ActionState, formData: FormData):
     document.body.appendChild(link)
     link.click()
     link.parentNode?.removeChild(link)
+
+    // Stage 2: Fetch Interview Prep (Sequential to avoid race conditions/timeouts)
+    let interviewPrep = null;
+    try {
+      console.log('Fetching interview prep...');
+      let prepRes;
+      try {
+        prepRes = await axios.post(`${API_BASE_URL}/api/v1/interview-prep`, 
+          { job_description: jobDescription },
+          { timeout: 35000 }
+        );
+      } catch (e: any) {
+        console.warn('V1 interview prep failed, trying fallback...', e.message);
+        // Fallback if 404 OR if it's a network/CORS error (which might happen if preflight fails on V1)
+        if (!e.response || e.response.status === 404) {
+          prepRes = await axios.post(`${API_BASE_URL}/api/interview-prep`, 
+            { job_description: jobDescription },
+            { timeout: 35000 }
+          );
+        } else {
+          throw e;
+        }
+      }
+      interviewPrep = prepRes.data;
+      console.log('Interview prep loaded successfully');
+    } catch (err: any) {
+      console.error('Interview prep fetch failed:', err.message || err);
+      // We don't throw here so the user still sees the success for the resume
+    }
     
     return { 
       type: 'success', 
-      message: 'Resume generated successfully! Your download should start automatically.',
-      downloadUrl: url 
+      message: 'Resume generated! Your download should start automatically.',
+      downloadUrl: url,
+      interviewPrep
     }
   } catch (error: any) {
     console.error('Error generating resume:', error)
@@ -84,14 +123,93 @@ async function generateResumeAction(prevState: ActionState, formData: FormData):
   }
 }
 
+function QuestionCard({ question, context, index }: { question: string; context: string; index: number }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="group bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer"
+      onClick={() => setIsOpen(!isOpen)}
+    >
+      <div className="p-4 flex items-start justify-between gap-4">
+        <div className="flex gap-4">
+          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white border border-slate-200 text-[10px] font-bold flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-colors">
+            {index + 1}
+          </span>
+          <p className="font-bold text-slate-800 text-sm leading-relaxed tracking-tight group-hover:text-slate-900 transition-colors">
+            {question}
+          </p>
+        </div>
+        <div className="flex-shrink-0 mt-1">
+          {isOpen ? (
+            <ChevronUp className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+          )}
+        </div>
+      </div>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-12 pb-4 pt-1">
+              <div className="p-3 rounded-xl bg-white border border-slate-100 flex gap-3 shadow-sm">
+                <div className="bg-indigo-50 p-1.5 rounded-lg flex-shrink-0 h-fit mt-0.5">
+                  <Info className="w-3.5 h-3.5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider mb-1">Coach Context</p>
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed italic">
+                    {context}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
 function App() {
   const [state, formAction, isPending] = useActionState(generateResumeAction, {
     type: 'idle',
     message: '',
   })
 
-  // Local state for file name display
+  // Local state for UI feedback
   const [fileName, setFileName] = useState<string>('')
+  
+  // Dynamic loading message
+  const [loadingStep, setLoadingStep] = useState(0)
+  
+  useEffect(() => {
+    if (isPending) {
+      const interval = setInterval(() => {
+        setLoadingStep(s => (s + 1) % 4)
+      }, 3000)
+      return () => clearInterval(interval)
+    } else {
+      setLoadingStep(0)
+    }
+  }, [isPending])
+
+  const loadingMessages = [
+    "Analyzing your technical DNA...",
+    "Matching professional path to job requirements...",
+    "Scanning project impact and metrics...",
+    "Preparing your personalized interview coach..."
+  ]
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-900 py-12 px-4 sm:px-6 lg:px-8 selection:bg-indigo-100 selection:text-indigo-700">
@@ -220,6 +338,26 @@ function App() {
                           <p className="text-sm opacity-90 leading-relaxed font-medium">{state.message}</p>
                         </div>
                       </div>
+
+                      {state.type === 'success' && (
+                        <div className="mt-8">
+                          {state.interviewPrep ? (
+                            <InterviewPrepPlan data={state.interviewPrep} />
+                          ) : (
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="p-8 bg-amber-50/50 border border-amber-100 rounded-[2rem] text-center"
+                            >
+                              <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-4" />
+                              <h4 className="text-amber-900 font-black text-xl mb-2 tracking-tight">Interview Prep Unavailable</h4>
+                              <p className="text-amber-800/80 text-sm font-medium max-w-sm mx-auto leading-relaxed">
+                                We couldn't generate your preparation plan this time, but your tailored resume is ready!
+                              </p>
+                            </motion.div>
+                          )}
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -303,9 +441,17 @@ function App() {
                 </div>
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-3">Forging Success</h3>
-              <p className="text-slate-500 font-medium mb-8 leading-relaxed">
-                Analyzing your technical DNA and professional path to match the job requirements perfectly...
-              </p>
+              <AnimatePresence mode="wait">
+                <motion.p 
+                  key={loadingStep}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="text-slate-500 font-medium mb-8 h-12 flex items-center justify-center leading-relaxed"
+                >
+                  {loadingMessages[loadingStep]}
+                </motion.p>
+              </AnimatePresence>
               
               <div className="grid grid-cols-1 gap-4">
                  <LoadingProgress label="Scanning Tech Stack" progress={35} />
@@ -316,6 +462,181 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  )
+}
+
+function InterviewPrepPlan({ data }: { data: NonNullable<ActionState['interviewPrep']> }) {
+  const [copied, setCopied] = useState(false)
+
+  // Defensive values
+  const tips = Array.isArray(data?.tips) ? data.tips : []
+  const techQs = Array.isArray(data?.technical_questions) ? data.technical_questions : []
+  const behavioralQs = Array.isArray(data?.behavioral_questions) ? data.behavioral_questions : []
+  const situationalQs = Array.isArray(data?.situational_questions) ? data.situational_questions : []
+  const winningStrategy = data?.winning_strategy || 'Be prepared and stay confident.'
+
+  const copyToClipboard = () => {
+    try {
+      const text = `
+INTERVIEW PREP PLAN
+-------------------
+WINNING STRATEGY:
+${winningStrategy}
+
+PREP TIPS:
+${tips.map(t => `- ${t}`).join('\n')}
+
+TECHNICAL QUESTIONS:
+${techQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`).join('\n\n')}
+
+BEHAVIORAL QUESTIONS:
+${behavioralQs.map((q, i) => `${i+1}. ${q?.question}\n   Context: ${q?.context}`).join('\n\n')}
+`.trim()
+
+      navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy text:', err)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="mt-8 space-y-6"
+    >
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden">
+        <div className="bg-slate-900 p-6 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Trophy className="w-6 h-6 text-indigo-400" />
+            <h3 className="text-xl font-black tracking-tight text-white mb-0">Interview Game Plan</h3>
+          </div>
+          <button 
+            type="button"
+            onClick={copyToClipboard}
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition-all text-sm font-bold border border-white/10"
+          >
+            {copied ? (
+              <><Check className="w-4 h-4 text-emerald-400" /> Copied!</>
+            ) : (
+              <><Copy className="w-4 h-4" /> Copy Plan</>
+            )}
+          </button>
+        </div>
+        
+        <div className="p-8 space-y-10">
+          {/* Winning Strategy */}
+          <div className="relative group">
+            <div className="absolute -inset-4 bg-indigo-50/50 rounded-[2rem] -z-10 group-hover:bg-indigo-50 transition-colors" />
+            <h4 className="text-indigo-900 font-bold mb-3 flex items-center gap-2 text-lg">
+              <Lightbulb className="w-6 h-6 text-indigo-600" /> Winning Strategy
+            </h4>
+            <p className="text-indigo-800 text-sm leading-relaxed font-semibold italic">
+              "{winningStrategy}"
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Tips Section */}
+            <div className="space-y-4">
+              <h4 className="text-slate-900 font-black text-sm uppercase tracking-widest flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-indigo-600" /> Actionable Tips
+              </h4>
+              <div className="space-y-3">
+                {tips.length > 0 ? tips.map((tip, i) => (
+                  <motion.div 
+                    key={i} 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 items-start hover:border-indigo-100 transition-colors"
+                  >
+                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0" />
+                    <p className="text-sm text-slate-700 font-medium leading-relaxed">{tip}</p>
+                  </motion.div>
+                )) : <p className="text-xs text-slate-400 italic">No specific tips generated.</p>}
+              </div>
+            </div>
+
+            {/* Quick Stats or Info */}
+            <div className="bg-slate-900 rounded-3xl p-6 text-white flex flex-col justify-center relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <Brain className="w-24 h-24" />
+               </div>
+               <p className="text-indigo-400 font-bold text-xs uppercase tracking-tighter mb-4">Preparation Scope</p>
+               <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-xs font-medium">Technical Depth</span>
+                    <span className="text-white font-bold text-xs uppercase bg-indigo-600 px-2 py-0.5 rounded">High</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-xs font-medium">Behavioral Focus</span>
+                    <span className="text-white font-bold text-xs uppercase bg-indigo-600 px-2 py-0.5 rounded">Strategic</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-xs font-medium">Complexity</span>
+                    <span className="text-white font-bold text-xs uppercase bg-indigo-600 px-2 py-0.5 rounded">Level 4</span>
+                  </div>
+               </div>
+            </div>
+          </div>
+
+          {/* Questions Sections */}
+          <div className="space-y-8 pt-4 border-t border-slate-100">
+            {techQs.length > 0 && (
+              <PrepSection 
+                title="Technical Excellence" 
+                subtitle="Skills & Implementations"
+                icon={<Brain className="w-5 h-5 text-indigo-600" />} 
+                questions={techQs}
+              />
+            )}
+            
+            {behavioralQs.length > 0 && (
+              <PrepSection 
+                title="Behavioral Alignment" 
+                subtitle="Culture & Soft Skills"
+                icon={<MessageSquare className="w-5 h-5 text-indigo-600" />} 
+                questions={behavioralQs}
+              />
+            )}
+
+            {situationalQs.length > 0 && (
+              <PrepSection 
+                title="Situational Awareness" 
+                subtitle="Scenario Based Challenges"
+                icon={<Rocket className="w-5 h-5 text-indigo-600" />} 
+                questions={situationalQs}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+function PrepSection({ title, subtitle, icon, questions }: { title: string; subtitle: string; icon: React.ReactNode; questions: { question: string; context: string }[] }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
+          {icon}
+        </div>
+        <div>
+          <h4 className="text-slate-900 font-black text-base leading-none mb-1 tracking-tight">{title}</h4>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{subtitle}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3">
+        {questions.map((q, i) => (
+          <QuestionCard key={i} question={q.question} context={q.context} index={i} />
+        ))}
+      </div>
     </div>
   )
 }

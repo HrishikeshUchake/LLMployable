@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from scrapers.github_scraper import GitHubScraper
 from scrapers.linkedin_scraper import LinkedInScraper
 from analyzer.job_analyzer import JobAnalyzer
+from analyzer.interview_generator import InterviewGenerator
 from generator.resume_generator import ResumeGenerator
 from generator.latex_compiler import LaTeXCompiler
 
@@ -29,6 +30,7 @@ CORS(app)
 github_scraper = GitHubScraper()
 linkedin_scraper = LinkedInScraper()
 job_analyzer = JobAnalyzer()
+interview_generator = InterviewGenerator()
 resume_generator = ResumeGenerator()
 latex_compiler = LaTeXCompiler()
 
@@ -251,6 +253,7 @@ def index():
 
 
 @app.route("/api/generate-resume", methods=["POST"])
+@app.route("/api/v1/generate-resume", methods=["POST"])
 def generate_resume():
     """
     Main endpoint to generate a tailored resume
@@ -332,6 +335,31 @@ def generate_resume():
             as_attachment=True,
             download_name="tailored_resume.pdf",
         )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/interview-prep", methods=["POST"])
+@app.route("/api/v1/interview-prep", methods=["POST"])
+def interview_prep():
+    """
+    Endpoint to generate interview preparation tips and questions
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        job_description = data.get("job_description", "").strip()
+
+        if not job_description:
+            return jsonify({"error": "Job description is required"}), 400
+
+        # Analyze job description
+        job_requirements = job_analyzer.analyze(job_description)
+
+        # Generate interview prep
+        prep_data = interview_generator.generate(job_requirements)
+
+        return jsonify(prep_data)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

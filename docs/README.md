@@ -1,27 +1,32 @@
 # 🚀 Mployable - AI-Powered Resume Builder
 
-**Mployable** is an intelligent resume builder designed for hackathons and job applications. It scans your GitHub and LinkedIn profiles, analyzes job descriptions, and generates tailored resumes as professional PDFs using LaTeX.
+**Mployable** is a sophisticated full-stack platform designed to automate the creation of hyper-tailored resumes. By leveraging LLM-based analysis and semantic matching, Mployable bridges the gap between your technical profile (GitHub/LinkedIn) and specific job requirements.
 
 ## ✨ Features
 
-- **Profile Scraping**: Automatically extracts data from GitHub and LinkedIn profiles
-- **Smart Analysis**: Uses Google Gemini AI to analyze job descriptions and match requirements
-- **Tailored Resumes**: Generates customized resumes highlighting your most relevant experience
-- **Professional PDFs**: Compiles beautiful LaTeX-formatted resumes
-- **Web Interface**: Simple, user-friendly web interface
-- **Fast & Efficient**: Get your tailored resume in seconds
+- **Modern Full-Stack Architecture**: React 19.2 frontend with Framer Motion animations and a robust Flask backend.
+- **Semantic Tech-Stack Matching**: Intelligent selection of GitHub repositories that best align with job descriptions using skill scoring.
+- **Hybrid Profile Sourcing**: 
+  - **GitHub**: Automatic repository scraping and language analysis.
+  - **LinkedIn**: Structured data import via LinkedIn Data Export ZIP.
+- **MongoDB Persistence**: Full database integration for user profiles, resume versioning, job application tracking, and intelligence caching.
+- **Gemini AI Integration**: Advanced job description analysis to identify required skills and experience levels.
+- **Professional LaTeX Generation**: Dynamic compilation of resume content into high-quality, ATS-friendly PDFs.
 
 ## 🛠️ Technology Stack
 
-- **Backend**: Python, Flask
+- **Frontend**: React 19.2, TypeScript, Tailwind CSS, Framer Motion
+- **Backend**: Python, Flask (running on port 5001)
+- **Database**: MongoDB
 - **AI**: Google Gemini API
-- **Profile Scraping**: PyGithub, BeautifulSoup
 - **PDF Generation**: LaTeX (pdflatex)
-- **Frontend**: HTML, CSS, JavaScript
+- **Deployment**: Docker, Docker Compose, Nginx
 
 ## 📋 Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
+- Node.js 18 or higher
+- MongoDB instance (local or Atlas)
 - LaTeX distribution (TeX Live, MiKTeX, or MacTeX)
 - Google Gemini API key
 - (Optional) GitHub Personal Access Token for higher API rate limits
@@ -37,27 +42,17 @@ cd Mployable
 
 ### 2. Install Dependencies
 
+**Backend:**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Install LaTeX (if not already installed)
-
-**Ubuntu/Debian:**
+**Frontend:**
 ```bash
-sudo apt-get update
-sudo apt-get install texlive-latex-base texlive-latex-extra
+cd frontend && npm install && cd ..
 ```
 
-**macOS:**
-```bash
-brew install --cask mactex
-```
-
-**Windows:**
-Download and install [MiKTeX](https://miktex.org/download)
-
-### 4. Set Up Environment Variables
+### 3. Set Up Environment Variables
 
 Create a `.env` file in the root directory:
 
@@ -69,7 +64,24 @@ Edit `.env` and add your API keys:
 
 ```
 GEMINI_API_KEY=your_gemini_api_key_here
+MONGODB_URI=your_mongodb_uri_here
 GITHUB_TOKEN=your_github_token_here  # Optional
+```
+
+### 4. Run the Application
+
+**Manual Start:**
+```bash
+# Terminal 1
+python app.py
+
+# Terminal 2
+cd frontend && npm run dev
+```
+
+**Using Docker:**
+```bash
+docker-compose up --build
 ```
 
 **Get a Gemini API Key:**

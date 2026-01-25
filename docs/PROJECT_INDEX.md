@@ -33,6 +33,13 @@
 ```
 Mployable/
 │
+├── 📂 frontend/                        # Modern React Frontend
+│   ├── src/                            # React application source
+│   ├── public/                         # Static assets
+│   ├── package.json                    # Node.js dependencies
+│   ├── vite.config.ts                  # Vite configuration
+│   └── tsconfig.json                   # TypeScript configuration
+│
 ├── 📂 config/                          # Configuration & Error Handling
 │   ├── __init__.py
 │   ├── config.py                       # Environment-specific configs
@@ -78,17 +85,14 @@ Mployable/
 ├── 📂 temp/                            # Temporary Files (runtime)
 ├── 📂 uploads/                         # User Uploads (runtime)
 │
-├── 🐍 Python Files
-│   ├── app.py                          # Original demo Flask app
-│   ├── app_production.py               # Production Flask app
-│   ├── demo.py                         # CLI demonstration
-│   ├── test_app.py                     # Original tests
-│   └── requirements.txt                # Python dependencies
-│
-├── 🐳 Docker Files
-│   ├── Dockerfile                      # Multi-stage build
-│   ├── docker-compose.yml              # Services orchestration
-│   └── nginx.conf                      # Reverse proxy config
+├── � README.md                        # Primary project entry point (root)
+├── 📄 app.py                           # Original demo Flask app
+├── 📄 app_production.py                # Production-ready Flask app
+├── 📄 requirements.txt                 # Python dependencies
+├── 📄 pytest.ini                       # PyTest configuration
+├── 📄 docker-compose.yml              # Services orchestration
+├── 📄 Dockerfile                      # Container image definition
+└── 📄 nginx.conf                      # Reverse proxy configuration
 │
 ├── 📚 Documentation Files
 │   ├── README.md                       # Project overview
