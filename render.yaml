@@ -1,0 +1,34 @@
+services:
+  # Unified Web Service (Frontend + Backend)
+  - type: web
+    name: mployable
+    env: docker
+    dockerContext: .
+    plan: free
+    region: oregon # Low latency for US/Global
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 5000
+      - key: STATIC_FOLDER
+        value: static
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: mployable-cache
+          property: connectionString
+    autoDeploy: true
+
+  # Redis for profile caching (crucial for performance)
+  - type: redis
+    name: mployable-cache
+    plan: free
+    ipAllowList: []

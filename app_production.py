@@ -14,7 +14,7 @@ Production features:
 - API documentation
 """
 
-from flask import Flask, request, jsonify, send_file, render_template_string
+from flask import Flask, request, jsonify, send_file, render_template_string, send_from_directory
 from flask_cors import CORS
 import os
 import os.path
@@ -55,7 +55,9 @@ config = get_config()
 logger = get_logger(__name__)
 
 # Create Flask app
-app = Flask(__name__)
+app = Flask(__name__, 
+            static_folder=os.environ.get('STATIC_FOLDER', 'static'),
+            static_url_path='')
 
 # Initialize database
 init_db()
@@ -372,13 +374,7 @@ def internal_error(error):
     )
 
 
-# Routes
-@app.route("/", methods=["GET"])
-def index():
-    """Serve the main HTML interface"""
-    return render_template_string(HTML_TEMPLATE)
-
-
+# API endpoints
 @app.route("/api/v1/generate-resume", methods=["POST"])
 def generate_resume():
     """
@@ -800,6 +796,21 @@ def health_detailed():
 def api_health():
     """API health endpoint"""
     return health()
+
+
+# Frontend routes - Catch-all for React Router
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_frontend(path):
+    """Serve the React frontend"""
+    # Don't intercept API calls
+    if path.startswith("api/"):
+        return jsonify({"error": "NOT_FOUND", "message": "API endpoint not found"}), 404
+        
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, "index.html")
 
 
 def create_app():
