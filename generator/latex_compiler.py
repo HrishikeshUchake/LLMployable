@@ -132,7 +132,7 @@ class LaTeXCompiler:
 
         # Build Experience items
         exp_latex = ""
-        for exp in experience[:5]:
+        for exp in experience[:3]:
             role = sanitize_latex(exp.get("role", ""))
             company = sanitize_latex(exp.get("company", ""))
             date = sanitize_latex(exp.get("date", ""))
@@ -149,13 +149,13 @@ class LaTeXCompiler:
                     bullets = [b.strip() for b in desc.split(". ") if b.strip()]
 
             exp_latex += f"    \\resumeSubheading\n      {{{company}}}{{{date}}}\n      {{{role}}}{{}}\n      \\resumeItemListStart\n"
-            for bullet in bullets[:4]:
+            for bullet in bullets[:5]:
                 exp_latex += f"        \\resumeItem{{{sanitize_latex(bullet)}}}\n"
             exp_latex += "      \\resumeItemListEnd\n\n"
 
         # Build Education items
         edu_latex = ""
-        for edu in education:
+        for edu in education[:2]:
             school = sanitize_latex(edu.get("school", ""))
             degree = sanitize_latex(edu.get("degree", ""))
             date = sanitize_latex(edu.get("date", ""))
@@ -167,7 +167,7 @@ class LaTeXCompiler:
 
         # Build Projects items
         proj_latex = ""
-        for proj in projects[:4]:
+        for proj in projects[:3]:
             p_name = sanitize_latex(proj.get("name", "Project"))
             p_desc = sanitize_latex(proj.get("description", ""))
             p_tech = ", ".join(
@@ -180,12 +180,12 @@ class LaTeXCompiler:
             proj_latex += f"    \\resumeProjectHeading\n      {{{proj_title}}}{{}}\n      \\resumeItemListStart\n"
             # Split description into bullets if needed
             bullets = [b.strip() for b in p_desc.split("\n") if b.strip()]
-            for bullet in bullets[:2]:
+            for bullet in bullets[:3]:
                 proj_latex += f"        \\resumeItem{{{sanitize_latex(bullet)}}}\n"
             proj_latex += "      \\resumeItemListEnd\n\n"
 
         # Build Skills
-        skills_str = ", ".join([sanitize_latex(s) for s in skills[:20]])
+        skills_str = ", ".join([sanitize_latex(s) for s in skills[:30]])
 
         # Build Certifications
         cert_items = []
@@ -198,6 +198,41 @@ class LaTeXCompiler:
         # Build Languages
         lang_str = ", ".join([sanitize_latex(l) for l in languages])
 
+        # Build sections conditionally
+        exp_section = ""
+        if exp_latex.strip():
+            exp_section = f"\\cvsection{{Experience}}\n\\begin{{itemize}}\n{exp_latex}\\end{{itemize}}"
+
+        proj_section = ""
+        if proj_latex.strip():
+            proj_section = f"\\cvsection{{Notable Projects}}\n\\begin{{itemize}}\n{proj_latex}\\end{{itemize}}"
+
+        edu_section = ""
+        if edu_latex.strip():
+            edu_section = f"\\cvsection{{Education}}\n\\begin{{itemize}}\n{edu_latex}\\end{{itemize}}"
+
+        skills_section = ""
+        if skills_str.strip():
+            skills_section = f"""\\cvsection{{Technical Skills}}
+\\begin{{itemize}}
+    \\item[] \\small{{
+     \\textbf{{Skills:}} {{{skills_str}}} \\vspace{{-7pt}}
+    }}
+\\end{{itemize}}"""
+
+        cert_section = ""
+        if cert_latex.strip():
+            cert_section = f"\\cvsection{{Certifications}}\n\\begin{{itemize}}\n{cert_latex}\\end{{itemize}}"
+
+        lang_section = ""
+        if lang_str.strip():
+            lang_section = f"""\\cvsection{{Languages}}
+\\begin{{itemize}}
+    \\item[] \\small{{
+     {lang_str} \\vspace{{-7pt}}
+    }}
+\\end{{itemize}}"""
+
         # Full Template - "Zero-Dependency" Professional Style
         latex_template = f"""\\documentclass[letterpaper,11pt]{{article}}
 
@@ -206,7 +241,7 @@ class LaTeXCompiler:
 \\usepackage[english]{{babel}}
 \\usepackage{{tabularx}}
 \\usepackage{{geometry}}
-\\geometry{{left=0.5in, top=0.5in, right=0.5in, bottom=0.5in}}
+\\geometry{{left=0.5in, top=0.4in, right=0.5in, bottom=0.4in}}
 
 % Font option: Use standard Palatino if available, or just stick to default
 \\usepackage[T1]{{fontenc}}
@@ -224,8 +259,8 @@ class LaTeXCompiler:
 
 % Sections formatting - Manual implementation without titlesec
 \\newcommand{{\\cvsection}}[1]{{
-  \\vspace{{10pt}}
-  {{\\large \\scshape #1}} \\\\ \\hrule \\vspace{{5pt}}
+  \\vspace{{5pt}}
+  {{\\large \\scshape #1}} \\\\ \\hrule \\vspace{{3pt}}
 }}
 
 % Custom commands implementation using standard LaTeX
@@ -234,22 +269,22 @@ class LaTeXCompiler:
 }}
 
 \\newcommand{{\\resumeSubheading}}[4]{{
-  \\item
+  \\item[]
   \\begin{{tabular*}}{{0.97\\textwidth}}[t]{{l@{{\\extracolsep{{\\fill}}}}r}}
     \\textbf{{#1}} & #2 \\\\
     \\textit{{\\small#3}} & \\textit{{\\small #4}} \\\\
-  \\end{{tabular*}}\\vspace{{-7pt}}
+  \\end{{tabular*}}\\vspace{{-5pt}}
 }}
 
 \\newcommand{{\\resumeProjectHeading}}[2]{{
-  \\item
+  \\item[]
   \\begin{{tabular*}}{{0.97\\textwidth}}{{l@{{\\extracolsep{{\\fill}}}}r}}
     \\small#1 & #2 \\\\
-  \\end{{tabular*}}\\vspace{{-7pt}}
+  \\end{{tabular*}}\\vspace{{-5pt}}
 }}
 
-\\newcommand{{\\resumeItemListStart}}{{\\begin{{itemize}}\\small}}
-\\newcommand{{\\resumeItemListEnd}}{{\\end{{itemize}}\\vspace{{-5pt}}}}
+\\newcommand{{\\resumeItemListStart}}{{\\begin{{itemize}}\\small\\setlength{{\\itemsep}}{{0pt}}\\setlength{{\\parsep}}{{0pt}}}}
+\\newcommand{{\\resumeItemListEnd}}{{\\end{{itemize}}\\vspace{{-2pt}}}}
 
 %-------------------------------------------
 %%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -266,41 +301,17 @@ class LaTeXCompiler:
 \\cvsection{{Summary}}
 \\small{{{summary}}}
 
-%-----------EXPERIENCE-----------
-\\cvsection{{Experience}}
-\\begin{{itemize}}
-{exp_latex}
-\\end{{itemize}}
+{exp_section}
 
-%-----------PROJECTS-----------
-\\cvsection{{Notable Projects}}
-\\begin{{itemize}}
-{proj_latex}
-\\end{{itemize}}
+{proj_section}
 
-%-----------EDUCATION-----------
-\\cvsection{{Education}}
-\\begin{{itemize}}
-{edu_latex}
-\\end{{itemize}}
+{edu_section}
 
-%-----------SKILLS-----------
-\\cvsection{{Technical Skills}}
-\\begin{{itemize}}
-\\item\\small{{\\textbf{{Skills:}} {skills_str}}}
-\\end{{itemize}}
+{skills_section}
 
-%-----------CERTIFICATIONS-----------
-\\cvsection{{Certifications}}
-\\begin{{itemize}}
-{cert_latex}
-\\end{{itemize}}
+{cert_section}
 
-%-----------LANGUAGES-----------
-\\cvsection{{Languages}}
-\\begin{{itemize}}
-\\item\\small{{{lang_str}}}
-\\end{{itemize}}
+{lang_section}
 
 \\end{{document}}
 """

@@ -51,7 +51,8 @@ class ResumeGenerator:
             response = self.model.generate_content(prompt)
 
             # Parse the response
-            resume_content = self._parse_gemini_response(response.text, profile_data)
+            resume_content = self._parse_gemini_response(
+                response.text, profile_data)
 
             return resume_content
 
@@ -65,7 +66,8 @@ class ResumeGenerator:
         linkedin_data = profile_data.get("linkedin", {})
 
         # Merge skills
-        github_languages = [lang for lang, _ in github_data.get("languages", [])]
+        github_languages = [lang for lang,
+                            _ in github_data.get("languages", [])]
         linkedin_skills = linkedin_data.get("skills", [])
         all_candidate_skills = list(set(github_languages + linkedin_skills))
 
@@ -112,7 +114,8 @@ class ResumeGenerator:
                     :10
                 ]:  # Limit to 10 items per category to avoid token bloat
                     # Clean up dictionary to string
-                    item_str = ", ".join([f"{k}: {v}" for k, v in item.items() if v])
+                    item_str = ", ".join(
+                        [f"{k}: {v}" for k, v in item.items() if v])
                     additional_info += f"- {item_str}\n"
 
         prompt = f"""You are an expert resume writer. Create a tailored resume based on the following information:
@@ -150,11 +153,14 @@ REQUIRED SKILLS FROM JOB:
 {json.dumps(job_requirements.get('skills', {}), indent=2)}
 
 TASK:
-Generate a tailored resume that:
-1. Highlights relevant skills that match the job requirements
-2. Incorporates both professional experience from LinkedIn and technical projects from GitHub
-3. Uses strong action words and quantifiable achievements
-4. Tailors the "Summary" and "Projects" descriptions to emphasize relevance to the specific job description
+Generate a detailed, tailored resume that fits perfectly on a single page. Follow these guidelines:
+1. Highlights relevant skills that match the job requirements.
+2. Incorporates both professional experience from LinkedIn and technical projects from GitHub.
+3. Uses strong action words and quantifiable achievements (e.g., "Increased efficiency by 20%", "Managed a team of 5").
+4. Provide a compelling professional summary (3-4 sentences) that highlights your unique value proposition.
+5. Provide 2-3 detailed bullet points for each significant work experience, focusing on achievements and technologies used.
+6. Provide a descriptive paragraph or 2-3 bullet points for each project, explaining the problem solved and the technical implementation.
+7. Ensure the layout is dense and professional to avoid empty space while strictly remaining on one page.
 
 Return the response in the following JSON format:
 {{
@@ -249,7 +255,8 @@ Only return valid JSON, no additional text."""
         linkedin_data = profile_data.get("linkedin", {})
 
         # Extract skills (merge GitHub and LinkedIn)
-        github_languages = [lang for lang, _ in github_data.get("languages", [])]
+        github_languages = [lang for lang,
+                            _ in github_data.get("languages", [])]
         linkedin_skills = linkedin_data.get("skills", [])
         all_candidate_skills = list(set(github_languages + linkedin_skills))
 
@@ -271,21 +278,27 @@ Only return valid JSON, no additional text."""
             + [s for s in all_candidate_skills if s not in highlighted_skills]
         )[:15]
 
+        # Format experience
+        experience = []
+        for exp in linkedin_data.get("experience", []):
+            experience.append({
+                "role": exp.get("title", ""),
+                "company": exp.get("company", ""),
+                "date": f"{exp.get('start_date', '')} - {exp.get('end_date', '')}".strip(" -"),
+                "description": exp.get("description", "")
+            })
+
         # Format projects (prioritize LinkedIn, then GitHub)
         projects = []
-
-        # Add LinkedIn Experience/Projects as projects in the base resume
-        for exp in linkedin_data.get("experience", [])[:3]:
-            projects.append(
-                {
-                    "name": f"{exp.get('title')} at {exp.get('company')}",
-                    "description": exp.get("description", ""),
-                    "technologies": [],
-                }
-            )
-
+        # Add LinkedIn Projects
+        for lp in linkedin_data.get("projects", []):
+            projects.append({
+                "name": lp.get("title", ""),
+                "description": lp.get("description", ""),
+                "technologies": []
+            })
         # Add GitHub projects
-        for proj in github_data.get("top_projects", [])[:3]:
+        for proj in github_data.get("top_projects", []):
             projects.append(
                 {
                     "name": proj["name"],
@@ -293,6 +306,26 @@ Only return valid JSON, no additional text."""
                     "technologies": [proj["language"]] + proj.get("topics", []),
                 }
             )
+
+        # Format Education
+        education = []
+        for edu in linkedin_data.get("education", []):
+            education.append({
+                "school": edu.get("school", ""),
+                "degree": edu.get("degree", ""),
+                "date": f"{edu.get('start_date', '')} - {edu.get('end_date', '')}".strip(" -"),
+                "details": edu.get("field_of_study", "")
+            })
+
+        # Certifications and Languages from full_data
+        full_data = linkedin_data.get("full_data", {})
+        certifications = []
+        if "certifications" in full_data:
+            certifications = [c.get("name", "") for c in full_data.get("certifications", []) if c.get("name")]
+        
+        languages = []
+        if "languages" in full_data:
+            languages = [l.get("name", "") for l in full_data.get("languages", []) if l.get("name")]
 
         return {
             "name": linkedin_data.get("name") or github_data.get("name", "Your Name"),
@@ -308,5 +341,9 @@ Only return valid JSON, no additional text."""
             "summary": linkedin_data.get("summary")
             or github_data.get("bio", "Experienced software developer"),
             "skills": final_skills,
-            "projects": projects[:5],
+            "experience": experience[:3],
+            "projects": projects[:3],
+            "education": education[:2],
+            "certifications": certifications[:5],
+            "languages": languages[:5]
         }
