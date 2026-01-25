@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConversation } from '@elevenlabs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, PhoneOff, MessageSquare, Sparkles, User, Bot, AlertCircle, BarChart3 } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, MessageSquare, Sparkles, AlertCircle, BarChart3 } from 'lucide-react';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5001');
@@ -57,7 +57,7 @@ export default function MockInterview() {
       
       await conversation.startSession({
         agentId: agentId,
-      });
+      } as any);
     } catch (err) {
       console.error('Failed to start interview:', err);
       setError('Could not access microphone. Please ensure permissions are granted.');
