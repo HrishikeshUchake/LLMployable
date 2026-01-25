@@ -807,10 +807,18 @@ def serve_frontend(path):
     if path.startswith("api/"):
         return jsonify({"error": "NOT_FOUND", "message": "API endpoint not found"}), 404
         
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+    # Check if we should serve static files or the template
+    static_file_path = os.path.join(app.static_folder, path)
+    if path != "" and os.path.exists(static_file_path):
         return send_from_directory(app.static_folder, path)
-    else:
+    
+    # Check for index.html in static folder
+    index_path = os.path.join(app.static_folder, "index.html")
+    if os.path.exists(index_path):
         return send_from_directory(app.static_folder, "index.html")
+    
+    # Fallback to HTML_TEMPLATE for development/testing if static folder isn't built
+    return render_template_string(HTML_TEMPLATE)
 
 
 def create_app():
