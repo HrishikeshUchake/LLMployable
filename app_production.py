@@ -492,7 +492,27 @@ def generate_resume():
             logger.error(f"[{request.request_id}] Job analysis failed: {e}")
             raise ResumeGenerationError("Failed to analyze job description")
 
-        # Step 3: Generate tailored resume content
+        # Step 3: Refine GitHub projects based on job requirements
+        if "github" in profile_data and "repositories" in profile_data["github"]:
+            try:
+                logger.debug(
+                    f"[{request.request_id}] Refining GitHub projects by relevance"
+                )
+                job_skills = job_requirements.get("skills", {})
+                relevant_projects = github_scraper.select_relevant_projects(
+                    profile_data["github"]["repositories"], job_skills
+                )
+                profile_data["github"]["top_projects"] = relevant_projects
+                logger.debug(
+                    f"[{request.request_id}] Refined to {len(relevant_projects)} relevant projects"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"[{request.request_id}] GitHub project refinement failed: {e}"
+                )
+                # Continue with default projects if refinement fails
+
+        # Step 4: Generate tailored resume content
         try:
             logger.debug(f"[{request.request_id}] Generating resume content")
             resume_content = resume_generator.generate(profile_data, job_requirements)
