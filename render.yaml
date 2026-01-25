@@ -10,8 +10,6 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
-      - key: PORT
-        value: 5000
       - key: STATIC_FOLDER
         value: static
       - key: GEMINI_API_KEY
@@ -21,5 +19,5 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
-        sync: false # Set this manually in Render Dashboard if you have an existing Redis
+        sync: false
     autoDeploy: true

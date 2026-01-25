@@ -50,11 +50,7 @@ COPY . .
 RUN mkdir -p logs uploads temp && \
     chmod -R 755 logs uploads temp
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
-
-# Expose port
+# Expose port (Render will use this)
 EXPOSE 5000
 
 # Default environment
@@ -64,13 +60,4 @@ ENV ENVIRONMENT=production \
     STATIC_FOLDER=static
 
 # Run with gunicorn
-CMD ["gunicorn", \
-     "--bind", "0.0.0.0:5000", \
-     "--workers", "4", \
-     "--threads", "2", \
-     "--worker-class", "gthread", \
-     "--timeout", "120", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-", \
-     "--log-level", "info", \
-     "app_production:create_app()"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 4 --worker-class gthread --timeout 300 --access-logfile - --error-logfile - --log-level info 'app_production:create_app()'"]
