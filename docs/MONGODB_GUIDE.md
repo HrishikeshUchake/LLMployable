@@ -76,7 +76,6 @@ user = User.objects.create(
     username="johndoe",
     password_hash="hashed...",
     github_username="johndoe-github",
-    linkedin_url="https://linkedin.com/in/johndoe",
     first_name="John",
     last_name="Doe"
 )

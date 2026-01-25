@@ -193,13 +193,7 @@ HTML_TEMPLATE = """
             </div>
             
             <div class="form-group">
-                <label for="linkedin">LinkedIn Profile URL (optional):</label>
-                <input type="text" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/username/">
-                <div class="example">Example: https://www.linkedin.com/in/satyanadella/</div>
-            </div>
-
-            <div class="form-group">
-                <label for="linkedinFile">OR Upload LinkedIn Data (ZIP):</label>
+                <label for="linkedinFile">Upload LinkedIn Data (ZIP):</label>
                 <input type="file" id="linkedinFile" name="linkedinFile" accept=".zip">
                 <div class="example">Settings > Data Privacy > Get a copy of your data > Download ZIP</div>
             </div>
@@ -224,13 +218,12 @@ HTML_TEMPLATE = """
             const status = document.getElementById('status');
 
             const github = document.getElementById('github').value;
-            const linkedin = document.getElementById('linkedin').value;
             const linkedinFile = document.getElementById('linkedinFile').files[0];
             const jobDescription = document.getElementById('jobDescription').value;
 
-            if (!github && !linkedin && !linkedinFile) {
+            if (!github && !linkedinFile) {
                 status.className = 'status error';
-                status.textContent = 'Please provide at least one profile (GitHub, LinkedIn URL, or Data Export)';
+                status.textContent = 'Please provide at least one profile (GitHub username or LinkedIn Data Export)';
                 return;
             }
 
@@ -250,7 +243,6 @@ HTML_TEMPLATE = """
                 if (linkedinFile) {
                     const formData = new FormData();
                     formData.append('github_username', github);
-                    formData.append('linkedin_url', linkedin);
                     formData.append('job_description', jobDescription);
                     formData.append('linkedin_data', linkedinFile);
 
@@ -266,7 +258,6 @@ HTML_TEMPLATE = """
                         },
                         body: JSON.stringify({
                             github_username: github,
-                            linkedin_url: linkedin,
                             job_description: jobDescription
                         })
                     });
@@ -383,8 +374,8 @@ def generate_resume():
     Main endpoint to generate a tailored resume
 
     Expected payload:
-    - JSON: {"github_username": "...", "linkedin_url": "...", "job_description": "..."}
-    - OR Multipart: form fields github_username, linkedin_url, job_description AND optional file linkedin_data
+    - JSON: {"github_username": "...", "job_description": "..."}
+    - OR Multipart: form fields github_username, job_description AND optional file linkedin_data
 
     Returns:
         PDF file: application/pdf
@@ -395,7 +386,6 @@ def generate_resume():
 
         if request.content_type and "multipart/form-data" in request.content_type:
             github_username = request.form.get("github_username", "").strip()
-            linkedin_url = request.form.get("linkedin_url", "").strip()
             job_description = request.form.get("job_description", "").strip()
             linkedin_file = request.files.get("linkedin_data")
         else:
@@ -404,7 +394,6 @@ def generate_resume():
                 raise InvalidJobDescription("Request body is empty")
 
             github_username = data.get("github_username", "").strip()
-            linkedin_url = data.get("linkedin_url", "").strip()
             job_description = data.get("job_description", "").strip()
 
         logger.info(f"[{request.request_id}] Resume generation request")
@@ -413,18 +402,16 @@ def generate_resume():
         (
             github_username,
             job_description,
-            linkedin_url,
         ) = InputValidator.validate_request(
-            github_username, job_description, linkedin_url
+            github_username, job_description
         )
 
         if (
             not github_username
-            and not linkedin_url
             and not (linkedin_file and linkedin_file.filename)
         ):
             raise ValidationError(
-                "Please provide at least one profile source (GitHub Username, LinkedIn URL, or LinkedIn Data Export zip file)"
+                "Please provide at least one profile source (GitHub Username or LinkedIn Data Export zip file)"
             )
 
         logger.info(f"[{request.request_id}] Input validation passed")
@@ -471,17 +458,6 @@ def generate_resume():
                 logger.warning(
                     f"[{request.request_id}] LinkedIn export parsing failed: {e}"
                 )
-        elif linkedin_url:
-            try:
-                logger.debug(f"[{request.request_id}] Scraping LinkedIn profile")
-                linkedin_data = linkedin_scraper.scrape_profile(linkedin_url)
-                profile_data["linkedin"] = linkedin_data
-                logger.debug(
-                    f"[{request.request_id}] LinkedIn profile scraped successfully"
-                )
-            except Exception as e:
-                logger.warning(f"[{request.request_id}] LinkedIn scraping failed: {e}")
-                # Don't fail if LinkedIn scraping fails, continue with GitHub data
 
         # Step 2: Analyze job description
         try:

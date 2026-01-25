@@ -92,7 +92,7 @@ The application will start at `http://localhost:5000`
 
 2. **Enter your profile information:**
    - GitHub username (e.g., `torvalds`)
-   - LinkedIn profile URL (optional)
+   - LinkedIn Data Export ZIP (optional)
 
 3. **Paste the job description** for the position you're applying to
 
@@ -131,10 +131,12 @@ Generates a tailored resume
 ```json
 {
   "github_username": "username",
-  "linkedin_url": "https://linkedin.com/in/username",
   "job_description": "Full job description text..."
 }
 ```
+
+**OR (with LinkedIn export)**
+Multipart form with `github_username`, `job_description`, and `linkedin_data` (file)
 
 **Response:**
 Returns PDF file as attachment
@@ -146,7 +148,7 @@ Health check endpoint
 
 1. **Profile Scraping**: 
    - Extracts repositories, languages, and projects from GitHub
-   - (LinkedIn support is placeholder - requires API access in production)
+   - Parses LinkedIn data export ZIP if provided
 
 2. **Job Analysis**:
    - Parses job description to extract required skills

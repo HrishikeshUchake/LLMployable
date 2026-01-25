@@ -123,7 +123,6 @@ class Resume(Document):
 
     user_id = StringField(required=True, unique=False, index=True)
     github_username = StringField()
-    linkedin_url = StringField()
     job_title = StringField()
     job_description = StringField()
     tailored_content = DictField(required=True)
@@ -198,7 +197,6 @@ class User(Document):
     username = StringField(unique=True, required=True, index=True)
     password_hash = StringField(required=True)
     github_username = StringField()
-    linkedin_url = StringField()
     first_name = StringField()
     last_name = StringField()
     bio = StringField()
