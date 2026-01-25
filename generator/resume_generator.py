@@ -5,41 +5,44 @@ Uses Google Gemini AI to analyze profile data and job requirements,
 then generates tailored resume content.
 """
 
-import google.generativeai as genai
+from google import genai
 import os
 import json
 from typing import Dict, List
 from config.config import get_config
+from database.repositories import ResumeRepository
 
 
 class ResumeGenerator:
     def __init__(self):
         """Initialize resume generator with Gemini API"""
-        config = get_config()
+        self.config = get_config()
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             print("Warning: GEMINI_API_KEY not found in environment variables")
-            self.model = None
+            self.client = None
         else:
-            genai.configure(api_key=api_key)
             # Using the model specified in configuration (cheapest: gemini-2.0-flash-lite)
             try:
-                self.model = genai.GenerativeModel(config.GEMINI_MODEL)
+                self.client = genai.Client(api_key=api_key)
+                self.model_name = self.config.GEMINI_MODEL
             except Exception:
-                self.model = genai.GenerativeModel("gemini-pro")
+                self.client = genai.Client(api_key=api_key)
+                self.model_name = "gemini-2.0-flash"
 
-    def generate(self, profile_data: Dict, job_requirements: Dict) -> Dict:
+    def generate(self, profile_data: Dict, job_requirements: Dict, user_id: str = None) -> Dict:
         """
         Generate tailored resume content based on profile data and job requirements
 
         Args:
             profile_data: Dictionary containing GitHub/LinkedIn profile data
             job_requirements: Dictionary containing analyzed job requirements
+            user_id: Optional user ID to associate with the generated resume
 
         Returns:
             Dictionary containing structured resume content
         """
-        if not self.model:
+        if not self.client:
             # Fallback without AI
             return self._generate_basic_resume(profile_data, job_requirements)
 
@@ -48,17 +51,37 @@ class ResumeGenerator:
             prompt = self._create_prompt(profile_data, job_requirements)
 
             # Generate content using Gemini
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
 
             # Parse the response
-            resume_content = self._parse_gemini_response(
-                response.text, profile_data)
-
-            return resume_content
+            return self._parse_gemini_response(response.text, profile_data)
 
         except Exception as e:
             print(f"Error generating resume with Gemini: {e}")
             return self._generate_basic_resume(profile_data, job_requirements)
+
+    def _store_resume(self, resume_content: Dict, profile_data: Dict, job_requirements: Dict, user_id: str = None) -> None:
+        """Helper to store resume in database"""
+        if not user_id:
+            return
+
+        try:
+            github_username = profile_data.get("github", {}).get("username")
+            job_title = resume_content.get("basics", {}).get("label", "Software Engineer")
+            job_description = job_requirements.get("original_description", "")
+
+            ResumeRepository.create_resume(
+                user_id=user_id,
+                github_username=github_username,
+                job_title=job_title,
+                job_description=job_description,
+                tailored_content=resume_content
+            )
+        except Exception as e:
+            print(f"Failed to store resume in database: {e}")
 
     def _create_prompt(self, profile_data: Dict, job_requirements: Dict) -> str:
         """Create prompt for Gemini API"""

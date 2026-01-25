@@ -14,6 +14,7 @@ from github.GithubException import GithubException
 import os
 from typing import Dict, List
 
+from database.repositories import CacheRepository
 from config import (
     get_logger,
     GitHubAPIError,
@@ -54,6 +55,12 @@ class GitHubScraper:
             GitHubAPIError: For other API errors
         """
         logger.info(f"Scraping GitHub profile for user: {username}")
+
+        # Check cache first
+        cached_data = CacheRepository.get_cached_github_profile(username)
+        if cached_data:
+            logger.info(f"Using cached GitHub data for {username}")
+            return cached_data
 
         try:
             user = self.github.get_user(username)
@@ -122,6 +129,13 @@ class GitHubScraper:
             profile_data["top_projects"] = top_projects
 
             logger.info(f"Successfully scraped GitHub profile for {username}")
+            
+            # Cache the profile data (using default 1 hour TTL)
+            try:
+                CacheRepository.cache_github_profile(username, profile_data)
+            except Exception as e:
+                logger.warning(f"Failed to cache GitHub profile for {username}: {e}")
+                
             return profile_data
 
         except GithubException as e:

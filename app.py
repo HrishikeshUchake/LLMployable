@@ -13,18 +13,27 @@ import uuid
 from dotenv import load_dotenv
 
 # Import our modules
+from database import init_db
+from database.repositories import UserRepository, ResumeRepository, JobApplicationRepository
 from scrapers.github_scraper import GitHubScraper
 from scrapers.linkedin_scraper import LinkedInScraper
 from analyzer.job_analyzer import JobAnalyzer
 from analyzer.interview_generator import InterviewGenerator
 from generator.resume_generator import ResumeGenerator
 from generator.latex_compiler import LaTeXCompiler
+from config.logging_config import setup_logging
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Setup logging
+logger = setup_logging(__name__)
+
+# Initialize database
+init_db()
 
 # Initialize components
 github_scraper = GitHubScraper()
@@ -264,14 +273,17 @@ def generate_resume():
     """
     try:
         linkedin_file = None
+        user_id = None
         if request.content_type and "multipart/form-data" in request.content_type:
             github_username = request.form.get("github_username", "").strip()
             job_description = request.form.get("job_description", "").strip()
             linkedin_file = request.files.get("linkedin_data")
+            user_id = request.form.get("user_id")
         else:
             data = request.json
             github_username = data.get("github_username", "").strip()
             job_description = data.get("job_description", "").strip()
+            user_id = data.get("user_id")
 
         if not job_description:
             return jsonify({"error": "Job description is required"}), 400
@@ -317,10 +329,49 @@ def generate_resume():
             profile_data["github"]["top_projects"] = relevant_projects
 
         # Step 4: Generate tailored resume content
-        resume_content = resume_generator.generate(profile_data, job_requirements)
+        resume_content = resume_generator.generate(profile_data, job_requirements, user_id=user_id)
 
-        # Step 4: Compile to PDF
+        # Step 5: Compile to PDF
         pdf_path = latex_compiler.compile(resume_content)
+
+        # Step 6: Move PDF to permanent storage and save to database if user is logged in
+        if user_id:
+            try:
+                # Move PDF to a more permanent 'uploads/resumes' folder
+                resumes_dir = os.path.join("uploads", "resumes")
+                os.makedirs(resumes_dir, exist_ok=True)
+                
+                permanent_pdf_name = f"resume_{user_id}_{uuid.uuid4().hex[:8]}.pdf"
+                permanent_pdf_path = os.path.join(resumes_dir, permanent_pdf_name)
+                
+                import shutil
+                shutil.copy2(pdf_path, permanent_pdf_path)
+
+                # Create Resume record
+                resume_doc = ResumeRepository.create_resume(
+                    user_id=user_id,
+                    github_username=github_username,
+                    job_title=resume_content.get("basics", {}).get("label", "Software Engineer"),
+                    job_description=job_description,
+                    tailored_content=resume_content,
+                    pdf_path=permanent_pdf_path
+                )
+
+                # Create Job Application record
+                company = resume_content.get("basics", {}).get("company", "Target Company")
+                job_url = request.form.get("job_url") if (request.content_type and "multipart/form-data" in request.content_type) else (data.get("job_url") if data else None)
+                
+                JobApplicationRepository.create_application(
+                    user_id=user_id,
+                    job_title=resume_content.get("basics", {}).get("label", "Software Engineer"),
+                    company=company,
+                    resume_id=str(resume_doc.id),
+                    job_url=job_url,
+                    job_description=job_description
+                )
+                logger.info(f"Stored resume and application for user {user_id}")
+            except Exception as e:
+                logger.error(f"Failed to store resume/application: {e}")
 
         # Validate that the PDF path is within the temp directory (security check)
         abs_temp_dir = os.path.abspath("temp")
@@ -332,8 +383,7 @@ def generate_resume():
         return send_file(
             pdf_path,
             mimetype="application/pdf",
-            as_attachment=True,
-            download_name="tailored_resume.pdf",
+            as_attachment=False,
         )
 
     except Exception as e:
@@ -365,7 +415,147 @@ def interview_prep():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/health")
+# --- Authentication & User Endpoints ---
+
+@app.route("/api/auth/register", methods=["POST"])
+@app.route("/api/v1/auth/register", methods=["POST"])
+def register():
+    """Register a new user"""
+    try:
+        data = request.json
+        email = data.get("email")
+        username = data.get("username")
+        password = data.get("password")
+        first_name = data.get("first_name", "")
+        last_name = data.get("last_name", "")
+
+        if not email or not username or not password:
+            return jsonify({"error": "Email, username, and password are required"}), 400
+
+        if UserRepository.get_user_by_email(email):
+            return jsonify({"error": "Email already registered"}), 400
+
+        if UserRepository.get_user_by_username(username):
+            return jsonify({"error": "Username already taken"}), 400
+
+        user = UserRepository.create_user(email, username, password, first_name, last_name)
+        return jsonify({
+            "message": "User registered successfully",
+            "user": {
+                "id": str(user.id),
+                "username": user.username,
+                "email": user.email
+            }
+        }), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/auth/login", methods=["POST"])
+@app.route("/api/v1/auth/login", methods=["POST"])
+def login():
+    """Authenticate user"""
+    try:
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+
+        user = UserRepository.authenticate(username, password)
+        if not user:
+            return jsonify({"error": "Invalid username or password"}), 401
+
+        return jsonify({
+            "message": "Login successful",
+            "user": {
+                "id": str(user.id),
+                "username": user.username,
+                "email": user.email
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/user/resumes/<user_id>", methods=["GET"])
+@app.route("/api/v1/user/resumes/<user_id>", methods=["GET"])
+def get_user_resumes(user_id):
+    """Get all resumes for a user"""
+    try:
+        resumes = ResumeRepository.get_user_resumes(user_id)
+        return jsonify([{
+            "id": str(r.id),
+            "job_title": r.job_title,
+            "github_username": r.github_username,
+            "created_at": r.created_at.isoformat(),
+            "is_archived": r.is_archived
+        } for r in resumes])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/v1/user/resumes/download/<resume_id>", methods=["GET"])
+def download_resume(resume_id):
+    """Download a previously generated resume PDF"""
+    try:
+        resume = ResumeRepository.get_resume(resume_id)
+        if not resume or not resume.pdf_path:
+            return jsonify({"error": "Resume not found"}), 404
+
+        if not os.path.exists(resume.pdf_path):
+            return jsonify({"error": "PDF file not found on server"}), 404
+
+        return send_file(
+            resume.pdf_path,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"resume_{resume.job_title.replace(' ', '_')}.pdf"
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/v1/user/resumes/preview/<resume_id>", methods=["GET"])
+def preview_resume(resume_id):
+    """Preview a previously generated resume PDF inline"""
+    try:
+        resume = ResumeRepository.get_resume(resume_id)
+        if not resume or not resume.pdf_path:
+            return jsonify({"error": "Resume not found"}), 404
+
+        if not os.path.exists(resume.pdf_path):
+            return jsonify({"error": "PDF file not found on server"}), 404
+
+        return send_file(
+            resume.pdf_path,
+            mimetype="application/pdf",
+            as_attachment=False
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/user/applications/<user_id>", methods=["GET"])
+@app.route("/api/v1/user/applications/<user_id>", methods=["GET"])
+def get_user_applications(user_id):
+    """Get all job applications for a user"""
+    try:
+        applications = JobApplicationRepository.get_user_applications(user_id)
+        return jsonify([{
+            "id": str(a.id),
+            "job_title": a.job_title,
+            "company": a.company,
+            "status": a.status,
+            "applied_date": a.applied_date.isoformat()
+        } for a in applications])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/health", methods=["GET"])
+@app.route("/api/v1/health", methods=["GET"])
 def health():
     """Health check endpoint"""
     return jsonify({"status": "healthy"})

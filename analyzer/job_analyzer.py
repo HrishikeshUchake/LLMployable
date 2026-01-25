@@ -11,6 +11,8 @@ Analyzes job descriptions to extract:
 import re
 from typing import Dict, List, Set
 
+from database.repositories import CacheRepository
+
 
 class JobAnalyzer:
     def __init__(self):
@@ -83,6 +85,14 @@ class JobAnalyzer:
         Returns:
             Dictionary containing analyzed requirements
         """
+        # Check cache first
+        try:
+            cached_result = CacheRepository.get_cached_job_analysis(job_description)
+            if cached_result:
+                return cached_result
+        except Exception:
+            pass  # Fallback to re-analyzing if cache fails
+
         job_desc_lower = job_description.lower()
 
         # Extract skills
@@ -97,7 +107,7 @@ class JobAnalyzer:
         # Identify key sections
         sections = self._identify_sections(job_description)
 
-        return {
+        result = {
             "original_description": job_description,
             "skills": skills,
             "experience_required": experience,
@@ -105,6 +115,14 @@ class JobAnalyzer:
             "sections": sections,
             "keywords": self._extract_keywords(job_desc_lower),
         }
+
+        # Cache the result (using default 48 hours TTL)
+        try:
+            CacheRepository.cache_job_analysis(job_description, result)
+        except Exception:
+            pass
+
+        return result
 
     def _extract_skills(self, job_desc_lower: str) -> Dict[str, List[str]]:
         """Extract technical skills from job description"""

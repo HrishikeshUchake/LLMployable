@@ -48,14 +48,16 @@ class DatabaseManager:
 
         try:
             logger.info(
-                f"Connecting to MongoDB at {config.DATABASE_HOST}:{config.DATABASE_PORT}"
+                f"Connecting to MongoDB..."
             )
 
             # Build connection string
-            if config.DATABASE_USERNAME and config.DATABASE_PASSWORD:
+            if config.DATABASE_URL and (config.DATABASE_URL.startswith("mongodb://") or config.DATABASE_URL.startswith("mongodb+srv://")):
+                connection_string = config.DATABASE_URL
+            elif config.DATABASE_USERNAME and config.DATABASE_PASSWORD:
                 connection_string = (
                     f"mongodb://{config.DATABASE_USERNAME}:{config.DATABASE_PASSWORD}"
-                    f"@{config.DATABASE_HOST}:{config.DATABASE_PORT}/{config.DATABASE_NAME}"
+                    f"@{config.DATABASE_HOST}:{config.DATABASE_PORT}/{config.DATABASE_NAME}?authSource=admin"
                 )
             else:
                 connection_string = f"mongodb://{config.DATABASE_HOST}:{config.DATABASE_PORT}/{config.DATABASE_NAME}"
@@ -216,7 +218,7 @@ class User(Document):
         "indexes": [
             "email",
             "username",
-            ("created_at", "-1"),
+            "-created_at",
         ],
     }
 
@@ -270,7 +272,7 @@ class JobCache(Document):
     meta = {
         "collection": "job_cache",
         "indexes": [
-            ("expires_at", 1),  # MongoDB will auto-delete after this date
+            {"fields": ["expires_at"], "expireAfterSeconds": 0},
         ],
     }
 
@@ -286,7 +288,7 @@ class GitHubProfileCache(Document):
     meta = {
         "collection": "github_cache",
         "indexes": [
-            ("expires_at", 1),  # MongoDB will auto-delete after this date
+            {"fields": ["expires_at"], "expireAfterSeconds": 0},
         ],
     }
 
@@ -310,8 +312,7 @@ class AuditLog(Document):
         "indexes": [
             "user_id",
             "action",
-            "created_at",
-            ("created_at", -1),
+            "-created_at",
         ],
     }
 

@@ -87,11 +87,15 @@ class TestGitHubScraper:
     """Tests for GitHub scraper"""
 
     @patch("scrapers.github_scraper.Github")
-    def test_scrape_profile_success(self, mock_github_class):
+    @patch("scrapers.github_scraper.CacheRepository")
+    def test_scrape_profile_success(self, mock_cache, mock_github_class):
         """Test successful profile scraping"""
         from scrapers.github_scraper import GitHubScraper
 
-        # Setup mock
+        # Setup mock cache miss
+        mock_cache.get_cached_github_profile.return_value = None
+
+        # Setup mock Github
         mock_user = Mock()
         mock_user.name = "Linus Torvalds"
         mock_user.bio = "Linux creator"
@@ -133,10 +137,14 @@ class TestGitHubScraper:
         assert result["languages"] == [("C", 1)]
 
     @patch("scrapers.github_scraper.Github")
-    def test_scrape_nonexistent_user(self, mock_github_class):
+    @patch("scrapers.github_scraper.CacheRepository")
+    def test_scrape_nonexistent_user(self, mock_cache, mock_github_class):
         """Test scraping nonexistent user"""
         from scrapers.github_scraper import GitHubScraper
         from github.GithubException import GithubException
+
+        # Setup mock cache miss
+        mock_cache.get_cached_github_profile.return_value = None
 
         mock_github_instance = Mock()
         mock_github_instance.get_user = Mock(
