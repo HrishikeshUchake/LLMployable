@@ -77,12 +77,8 @@ export default function Dashboard() {
   const handlePreview = async (resumeId: string) => {
     try {
         setPreviewResumeId(resumeId);
-        const response = await axios.get(`${API_BASE_URL}/api/v1/user/resumes/preview/${resumeId}`, {
-          responseType: 'blob'
-        });
-        
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
+        // Direct URL is more robust for PDF iframes than blob URLs
+        const url = `${API_BASE_URL}/api/v1/user/resumes/preview/${resumeId}`;
         setPreviewUrl(url);
     } catch (err: any) {
         console.error('Preview error:', err);
@@ -91,7 +87,7 @@ export default function Dashboard() {
   };
 
   const closePreview = () => {
-    if (previewUrl) {
+    if (previewUrl && previewUrl.startsWith('blob:')) {
         window.URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(null);
@@ -482,10 +478,15 @@ export default function Dashboard() {
               <div className="p-6 bg-card border-t border-muted flex flex-col sm:flex-row justify-center items-center gap-4">
                 <button 
                     onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = previewUrl;
-                        link.setAttribute('download', 'tailored_resume.pdf');
-                        link.click();
+                        if (previewResumeId) {
+                            const downloadUrl = `${API_BASE_URL}/api/v1/user/resumes/download/${previewResumeId}`;
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.setAttribute('download', 'tailored_resume.pdf');
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }
                     }}
                     className="w-full sm:w-auto flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-primary-foreground px-10 py-3.5 rounded-2xl font-black shadow-xl shadow-primary/25 transition-smooth"
                 >
