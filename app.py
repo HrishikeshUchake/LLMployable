@@ -351,7 +351,7 @@ if __name__ == "__main__":
     debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
     # Default to localhost for security, can be overridden with FLASK_HOST=0.0.0.0
     host = os.getenv("FLASK_HOST", "127.0.0.1")
-    port = int(os.getenv("FLASK_PORT", "5000"))
+    port = int(os.getenv("FLASK_PORT", os.getenv("PORT", "5001")))
 
     # Run the application
     app.run(debug=debug_mode, host=host, port=port)
