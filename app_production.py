@@ -752,6 +752,51 @@ def get_user_resumes(user_id):
         return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
 
 
+@app.route("/api/v1/user/resumes/download/<resume_id>", methods=["GET"])
+def download_resume(resume_id):
+    """Download a previously generated resume PDF"""
+    try:
+        from database.repositories import ResumeRepository
+        resume = ResumeRepository.get_resume(resume_id)
+        if not resume or not resume.pdf_path:
+            return jsonify({"error": "Resume not found"}), 404
+
+        if not os.path.exists(resume.pdf_path):
+            return jsonify({"error": "PDF file not found on server"}), 404
+
+        return send_file(
+            resume.pdf_path,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"resume_{resume.job_title.replace(' ', '_')}.pdf"
+        )
+    except Exception as e:
+        logger.error(f"Failed to download resume: {e}", exc_info=True)
+        return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
+
+
+@app.route("/api/v1/user/resumes/preview/<resume_id>", methods=["GET"])
+def preview_resume(resume_id):
+    """Preview a previously generated resume PDF inline"""
+    try:
+        from database.repositories import ResumeRepository
+        resume = ResumeRepository.get_resume(resume_id)
+        if not resume or not resume.pdf_path:
+            return jsonify({"error": "Resume not found"}), 404
+
+        if not os.path.exists(resume.pdf_path):
+            return jsonify({"error": "PDF file not found on server"}), 404
+
+        return send_file(
+            resume.pdf_path,
+            mimetype="application/pdf",
+            as_attachment=False
+        )
+    except Exception as e:
+        logger.error(f"Failed to preview resume: {e}", exc_info=True)
+        return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
+
+
 @app.route("/api/v1/user/applications/<user_id>", methods=["GET"])
 def get_user_applications(user_id):
     """Get all job applications for a user"""
