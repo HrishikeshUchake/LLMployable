@@ -752,48 +752,58 @@ def get_user_resumes(user_id):
         return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
 
 
+@app.route("/api/user/resumes/download/<resume_id>", methods=["GET"])
 @app.route("/api/v1/user/resumes/download/<resume_id>", methods=["GET"])
 def download_resume(resume_id):
     """Download a previously generated resume PDF"""
     try:
         from database.repositories import ResumeRepository
+        logger.info(f"Download request for resume: {resume_id}")
         resume = ResumeRepository.get_resume(resume_id)
         if not resume or not resume.pdf_path:
+            logger.warning(f"Resume not found or no PDF path: {resume_id}")
             return jsonify({"error": "Resume not found"}), 404
 
-        if not os.path.exists(resume.pdf_path):
+        abs_path = os.path.abspath(resume.pdf_path)
+        if not os.path.exists(abs_path):
+            logger.error(f"PDF file not found on disk: {abs_path}")
             return jsonify({"error": "PDF file not found on server"}), 404
 
         return send_file(
-            resume.pdf_path,
+            abs_path,
             mimetype="application/pdf",
             as_attachment=True,
             download_name=f"resume_{resume.job_title.replace(' ', '_')}.pdf"
         )
     except Exception as e:
-        logger.error(f"Failed to download resume: {e}", exc_info=True)
+        logger.error(f"Failed to download resume {resume_id}: {e}", exc_info=True)
         return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
 
 
+@app.route("/api/user/resumes/preview/<resume_id>", methods=["GET"])
 @app.route("/api/v1/user/resumes/preview/<resume_id>", methods=["GET"])
 def preview_resume(resume_id):
     """Preview a previously generated resume PDF inline"""
     try:
         from database.repositories import ResumeRepository
+        logger.info(f"Preview request for resume: {resume_id}")
         resume = ResumeRepository.get_resume(resume_id)
         if not resume or not resume.pdf_path:
+            logger.warning(f"Resume not found or no PDF path: {resume_id}")
             return jsonify({"error": "Resume not found"}), 404
 
-        if not os.path.exists(resume.pdf_path):
+        abs_path = os.path.abspath(resume.pdf_path)
+        if not os.path.exists(abs_path):
+            logger.error(f"PDF file not found on disk: {abs_path}")
             return jsonify({"error": "PDF file not found on server"}), 404
 
         return send_file(
-            resume.pdf_path,
+            abs_path,
             mimetype="application/pdf",
             as_attachment=False
         )
     except Exception as e:
-        logger.error(f"Failed to preview resume: {e}", exc_info=True)
+        logger.error(f"Failed to preview resume {resume_id}: {e}", exc_info=True)
         return jsonify({"error": "INTERNAL_ERROR", "message": str(e)}), 500
 
 
