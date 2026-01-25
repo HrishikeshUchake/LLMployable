@@ -6,6 +6,7 @@ Provides connection management, models, and utilities for MongoDB operations.
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
+import certifi
 from mongoengine import (
     connect,
     disconnect,
@@ -54,15 +55,21 @@ class DatabaseManager:
             # Build connection string
             if config.DATABASE_URL and (config.DATABASE_URL.startswith("mongodb://") or config.DATABASE_URL.startswith("mongodb+srv://")):
                 connection_string = config.DATABASE_URL
+                # Ensure TLS is used for Atlas (mongodb+srv)
+                if config.DATABASE_URL.startswith("mongodb+srv://") and "tls=" not in connection_string and "ssl=" not in connection_string:
+                    if "?" in connection_string:
+                        connection_string += "&tls=true"
+                    else:
+                        connection_string += "?tls=true"
             elif config.DATABASE_USERNAME and config.DATABASE_PASSWORD:
                 connection_string = (
                     f"mongodb://{config.DATABASE_USERNAME}:{config.DATABASE_PASSWORD}"
-                    f"@{config.DATABASE_HOST}:{config.DATABASE_PORT}/{config.DATABASE_NAME}?authSource=admin"
+                    f"@{config.DATABASE_HOST}:{config.DATABASE_PORT}/{config.DATABASE_NAME}?authSource=admin&tls=true"
                 )
             else:
                 connection_string = f"mongodb://{config.DATABASE_HOST}:{config.DATABASE_PORT}/{config.DATABASE_NAME}"
 
-            # Connect with connection pooling
+            # Connect with connection pooling and SSL configuration
             connect(
                 db=config.DATABASE_NAME,
                 host=connection_string,
@@ -71,6 +78,7 @@ class DatabaseManager:
                 connect=True,
                 serverSelectionTimeoutMS=5000,
                 connectTimeoutMS=10000,
+                tlsCAFile=certifi.where() if "tls=true" in connection_string.lower() or "ssl=true" in connection_string.lower() or "mongodb+srv" in connection_string.lower() else None
             )
 
             self._connected = True
