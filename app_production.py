@@ -764,13 +764,28 @@ def download_resume(resume_id):
             logger.warning(f"Resume not found or no PDF path: {resume_id}")
             return jsonify({"error": "Resume not found"}), 404
 
-        abs_path = os.path.abspath(resume.pdf_path)
-        if not os.path.exists(abs_path):
-            logger.error(f"PDF file not found on disk: {abs_path}")
+        # Debug pathing
+        logger.debug(f"Stored path: {resume.pdf_path}")
+        
+        # Try both relative and "proper" absolute path
+        possible_paths = [
+            resume.pdf_path,
+            os.path.join(os.getcwd(), resume.pdf_path),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), resume.pdf_path)
+        ]
+        
+        target_path = None
+        for p in possible_paths:
+            if os.path.exists(p):
+                target_path = p
+                break
+        
+        if not target_path:
+            logger.error(f"PDF file not found for download in any of these locations: {possible_paths}")
             return jsonify({"error": "PDF file not found on server"}), 404
 
         return send_file(
-            abs_path,
+            os.path.abspath(target_path),
             mimetype="application/pdf",
             as_attachment=True,
             download_name=f"resume_{resume.job_title.replace(' ', '_')}.pdf"
@@ -792,13 +807,33 @@ def preview_resume(resume_id):
             logger.warning(f"Resume not found or no PDF path: {resume_id}")
             return jsonify({"error": "Resume not found"}), 404
 
-        abs_path = os.path.abspath(resume.pdf_path)
-        if not os.path.exists(abs_path):
-            logger.error(f"PDF file not found on disk: {abs_path}")
-            return jsonify({"error": "PDF file not found on server"}), 404
+        # Debug pathing
+        logger.debug(f"Stored path: {resume.pdf_path}")
+        logger.debug(f"Current CWD: {os.getcwd()}")
+        
+        # Try both relative and "proper" absolute path
+        possible_paths = [
+            resume.pdf_path,
+            os.path.join(os.getcwd(), resume.pdf_path),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), resume.pdf_path)
+        ]
+        
+        target_path = None
+        for p in possible_paths:
+            if os.path.exists(p):
+                target_path = p
+                logger.debug(f"Found PDF at: {p}")
+                break
+        
+        if not target_path:
+            logger.error(f"PDF file not found in any of these locations: {possible_paths}")
+            return jsonify({
+                "error": "PDF file not found on server",
+                "details": f"Attempted locations: {possible_paths}"
+            }), 404
 
         return send_file(
-            abs_path,
+            os.path.abspath(target_path),
             mimetype="application/pdf",
             as_attachment=False
         )
