@@ -236,7 +236,8 @@ class CacheRepository:
 
         if cache:
             logger.debug(f"Job analysis cache hit")
-            return cache.analyzed_content
+            # Convert to plain dict to avoid ReferenceError when modified
+            return dict(cache.analyzed_content)
 
         logger.debug(f"Job analysis cache miss")
         return None
@@ -269,7 +270,8 @@ class CacheRepository:
 
         if cache:
             logger.debug(f"GitHub profile cache hit: {username}")
-            return cache.profile_data
+            # Convert to plain dict to avoid ReferenceError when modified
+            return dict(cache.profile_data)
 
         logger.debug(f"GitHub profile cache miss: {username}")
         return None
