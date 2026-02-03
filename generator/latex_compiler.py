@@ -13,7 +13,9 @@ from datetime import datetime
 class LaTeXCompiler:
     def __init__(self):
         """Initialize LaTeX compiler"""
-        self.temp_dir = "temp"
+        # Use absolute path for temp directory to be safe in all environments
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.temp_dir = os.path.join(base_dir, "temp")
         os.makedirs(self.temp_dir, exist_ok=True)
 
     def compile(self, resume_content: Dict) -> str:

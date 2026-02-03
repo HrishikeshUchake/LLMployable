@@ -28,6 +28,9 @@ from config.config import Config
 load_dotenv()
 Config.from_env()
 
+# Base directory of the application
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 app = Flask(__name__)
 CORS(app)
 
@@ -393,11 +396,15 @@ def generate_resume():
         if user_id:
             try:
                 # Move PDF to a more permanent 'uploads/resumes' folder
-                resumes_dir = os.path.join("uploads", "resumes")
+                # Use absolute paths for file system operations but keep DB path portable
+                resumes_dir = os.path.join(BASE_DIR, "uploads", "resumes")
                 os.makedirs(resumes_dir, exist_ok=True)
                 
                 permanent_pdf_name = f"resume_{user_id}_{uuid.uuid4().hex[:8]}.pdf"
                 permanent_pdf_path = os.path.join(resumes_dir, permanent_pdf_name)
+                
+                # The path we store in DB (relative for portability across environments)
+                db_pdf_path = os.path.join("uploads", "resumes", permanent_pdf_name)
                 
                 import shutil
                 shutil.copy2(pdf_path, permanent_pdf_path)
@@ -409,7 +416,7 @@ def generate_resume():
                     job_title=resume_content.get("basics", {}).get("label", "Software Engineer"),
                     job_description=job_description,
                     tailored_content=resume_content,
-                    pdf_path=permanent_pdf_path
+                    pdf_path=db_pdf_path
                 )
 
                 # Create Job Application record
@@ -581,11 +588,24 @@ def download_resume(resume_id):
         if not resume or not resume.pdf_path:
             return jsonify({"error": "Resume not found"}), 404
 
-        if not os.path.exists(resume.pdf_path):
+        # Try multiple path resolutions
+        possible_paths = [
+            resume.pdf_path,
+            os.path.join(BASE_DIR, resume.pdf_path),
+            os.path.join(os.getcwd(), resume.pdf_path)
+        ]
+        
+        target_path = None
+        for p in possible_paths:
+            if p and os.path.exists(p):
+                target_path = p
+                break
+                
+        if not target_path:
             return jsonify({"error": "PDF file not found on server"}), 404
 
         return send_file(
-            resume.pdf_path,
+            target_path,
             mimetype="application/pdf",
             as_attachment=True,
             download_name=f"resume_{resume.job_title.replace(' ', '_')}.pdf"
@@ -602,11 +622,24 @@ def preview_resume(resume_id):
         if not resume or not resume.pdf_path:
             return jsonify({"error": "Resume not found"}), 404
 
-        if not os.path.exists(resume.pdf_path):
+        # Try multiple path resolutions
+        possible_paths = [
+            resume.pdf_path,
+            os.path.join(BASE_DIR, resume.pdf_path),
+            os.path.join(os.getcwd(), resume.pdf_path)
+        ]
+        
+        target_path = None
+        for p in possible_paths:
+            if p and os.path.exists(p):
+                target_path = p
+                break
+                
+        if not target_path:
             return jsonify({"error": "PDF file not found on server"}), 404
 
         return send_file(
-            resume.pdf_path,
+            target_path,
             mimetype="application/pdf",
             as_attachment=False
         )

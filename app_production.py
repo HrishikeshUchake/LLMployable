@@ -50,6 +50,9 @@ from analyzer.interview_generator import InterviewGenerator
 from generator.resume_generator import ResumeGenerator
 from generator.latex_compiler import LaTeXCompiler
 
+# Base directory of the application
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Get configuration
 config = get_config()
 logger = get_logger(__name__)
@@ -451,10 +454,11 @@ def generate_resume():
         if linkedin_file and linkedin_file.filename:
             try:
                 logger.debug(f"[{rid}] Parsing LinkedIn data export")
-                # Save file temporarily
+                # Save file temporarily using absolute path
                 temp_filename = f"{uuid.uuid4()}_{linkedin_file.filename}"
-                file_path = os.path.join(config.UPLOAD_DIR, temp_filename)
-                os.makedirs(config.UPLOAD_DIR, exist_ok=True)
+                abs_upload_dir = os.path.join(BASE_DIR, config.UPLOAD_DIR)
+                file_path = os.path.join(abs_upload_dir, temp_filename)
+                os.makedirs(abs_upload_dir, exist_ok=True)
                 linkedin_file.save(file_path)
 
                 linkedin_data = linkedin_scraper.parse_export(file_path)
@@ -543,11 +547,15 @@ def generate_resume():
                 from database.repositories import ResumeRepository, JobApplicationRepository
                 
                 # Move PDF to a more permanent 'uploads/resumes' folder
-                resumes_dir = os.path.join("uploads", "resumes")
+                # Use absolute paths for file system operations but keep DB path portable
+                resumes_dir = os.path.join(BASE_DIR, config.UPLOAD_DIR, "resumes")
                 os.makedirs(resumes_dir, exist_ok=True)
                 
                 permanent_pdf_name = f"resume_{user_id}_{uuid.uuid4().hex[:8]}.pdf"
                 permanent_pdf_path = os.path.join(resumes_dir, permanent_pdf_name)
+                
+                # The path we store in DB (relative for portability across environments)
+                db_pdf_path = os.path.join(config.UPLOAD_DIR, "resumes", permanent_pdf_name)
                 
                 import shutil
                 shutil.copy2(abs_pdf_path, permanent_pdf_path)
@@ -559,7 +567,7 @@ def generate_resume():
                     job_title=resume_content.get("basics", {}).get("label", "Software Engineer"),
                     job_description=job_description,
                     tailored_content=resume_content,
-                    pdf_path=permanent_pdf_path
+                    pdf_path=db_pdf_path
                 )
 
                 company = resume_content.get("basics", {}).get("company", "Target Company")
@@ -766,23 +774,41 @@ def download_resume(resume_id):
 
         # Debug pathing
         logger.debug(f"Stored path: {resume.pdf_path}")
+        logger.debug(f"Current BASE_DIR: {BASE_DIR}")
         
         # Try both relative and "proper" absolute path
         possible_paths = [
             resume.pdf_path,
+            os.path.join(BASE_DIR, resume.pdf_path),
             os.path.join(os.getcwd(), resume.pdf_path),
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), resume.pdf_path)
+            # Also check if it's already an absolute path
+            resume.pdf_path if os.path.isabs(resume.pdf_path) else None
         ]
+        # Remove None values
+        possible_paths = [p for p in possible_paths if p]
         
         target_path = None
         for p in possible_paths:
             if os.path.exists(p):
                 target_path = p
+                logger.debug(f"Found PDF at: {p}")
                 break
         
         if not target_path:
-            logger.error(f"PDF file not found for download in any of these locations: {possible_paths}")
-            return jsonify({"error": "PDF file not found on server"}), 404
+            logger.error(f"PDF file not found in any of these locations: {possible_paths}")
+            # Fallback search: look for just the filename in the uploads/resumes directory
+            if resume.pdf_path:
+                filename = os.path.basename(resume.pdf_path)
+                fallback_path = os.path.join(BASE_DIR, config.UPLOAD_DIR, "resumes", filename)
+                if os.path.exists(fallback_path):
+                    target_path = fallback_path
+                    logger.info(f"Found PDF via fallback filename search at: {fallback_path}")
+        
+        if not target_path:
+            return jsonify({
+                "error": "PDF file not found on server",
+                "details": f"Attempted locations: {possible_paths}"
+            }), 404
 
         return send_file(
             os.path.abspath(target_path),
@@ -809,14 +835,18 @@ def preview_resume(resume_id):
 
         # Debug pathing
         logger.debug(f"Stored path: {resume.pdf_path}")
-        logger.debug(f"Current CWD: {os.getcwd()}")
+        logger.debug(f"Current BASE_DIR: {BASE_DIR}")
         
         # Try both relative and "proper" absolute path
         possible_paths = [
             resume.pdf_path,
+            os.path.join(BASE_DIR, resume.pdf_path),
             os.path.join(os.getcwd(), resume.pdf_path),
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), resume.pdf_path)
+            # Also check if it's already an absolute path
+            resume.pdf_path if os.path.isabs(resume.pdf_path) else None
         ]
+        # Remove None values
+        possible_paths = [p for p in possible_paths if p]
         
         target_path = None
         for p in possible_paths:
@@ -824,6 +854,16 @@ def preview_resume(resume_id):
                 target_path = p
                 logger.debug(f"Found PDF at: {p}")
                 break
+        
+        if not target_path:
+            logger.error(f"PDF file not found in any of these locations: {possible_paths}")
+            # Fallback search: look for just the filename in the uploads/resumes directory
+            if resume.pdf_path:
+                filename = os.path.basename(resume.pdf_path)
+                fallback_path = os.path.join(BASE_DIR, config.UPLOAD_DIR, "resumes", filename)
+                if os.path.exists(fallback_path):
+                    target_path = fallback_path
+                    logger.info(f"Found PDF via fallback filename search at: {fallback_path}")
         
         if not target_path:
             logger.error(f"PDF file not found in any of these locations: {possible_paths}")
@@ -927,6 +967,15 @@ def serve_frontend(path):
 
 def create_app():
     """Application factory"""
+    # Ensure all required directories exist using absolute paths
+    for directory in [config.LOG_DIR, config.UPLOAD_DIR, config.TEMP_DIR]:
+        abs_dir = os.path.join(BASE_DIR, directory)
+        os.makedirs(abs_dir, exist_ok=True)
+        logger.info(f"Verified directory: {abs_dir}")
+    
+    # Ensure resumes subfolder exists
+    os.makedirs(os.path.join(BASE_DIR, config.UPLOAD_DIR, "resumes"), exist_ok=True)
+    
     return app
 
 
